@@ -1,0 +1,147 @@
+/**
+ * 侧边栏 Webview 视图提供者
+ * 在 VS Code 侧边栏中渲染片段列表，处理列表相关的消息通信
+ * 点击新建/编辑时通过命令打开编辑器面板
+ */
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { SnippetService } from './snippetService';
+
+export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
+  /** 视图标识，需与 package.json 中的 views.id 一致 */
+  public static readonly viewType = 'custom-snippet-manager.sidebar';
+  /** 侧边栏 Webview 视图实例 */
+  private view?: vscode.WebviewView;
+  /** 扩展资源 URI */
+  private readonly extensionUri: vscode.Uri;
+  /** 片段数据服务 */
+  private readonly snippetService: SnippetService;
+
+  constructor(extensionUri: vscode.Uri, snippetService: SnippetService) {
+    this.extensionUri = extensionUri;
+    this.snippetService = snippetService;
+  }
+
+  /**
+   * VS Code 调用此方法解析 webview 视图
+   * 在侧边栏首次展开或视图需要重建时触发
+   */
+  public resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
+  ): void {
+    this.view = webviewView;
+
+    // 配置 webview 选项：启用脚本并限制资源加载范围
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.extensionUri, 'webview', 'dist'),
+      ],
+    };
+
+    // 加载 webview HTML 内容
+    webviewView.webview.html = this.getWebviewHtml(webviewView.webview);
+
+    // 监听来自侧边栏 webview 的消息
+    webviewView.webview.onDidReceiveMessage((msg: { type: string; payload?: unknown }) => {
+      switch (msg.type) {
+        // 前端请求获取片段列表
+        case 'getSnippets':
+          this.postToView('snippetsList', this.snippetService.getAll());
+          break;
+
+        // 前端请求打开编辑器（新建或编辑片段）
+        case 'openEditor':
+          vscode.commands.executeCommand('custom-snippet-manager.openEditor', msg.payload);
+          break;
+
+        // 前端请求删除片段
+        case 'deleteSnippet': {
+          const { id } = msg.payload as { id: string };
+          this.snippetService.delete(id);
+          // 删除后刷新列表
+          this.postToView('snippetsList', this.snippetService.getAll());
+          break;
+        }
+      }
+    });
+  }
+
+  /** 刷新侧边栏列表，由编辑器面板保存/删除片段后调用 */
+  public refresh(): void {
+    if (this.view) {
+      this.postToView('snippetsList', this.snippetService.getAll());
+    }
+  }
+
+  /** 向侧边栏 webview 发送消息 */
+  private postToView(type: string, payload?: unknown): void {
+    this.view?.webview.postMessage({ type, payload });
+  }
+
+  /**
+   * 生成侧边栏 webview 的 HTML 内容
+   * 与编辑器面板共享同一套 Vue 构建产物，通过 __VIEW_MODE 区分渲染
+   */
+  private getWebviewHtml(webview: vscode.Webview): string {
+    const distUri = vscode.Uri.joinPath(this.extensionUri, 'webview', 'dist');
+    const distPath = distUri.fsPath;
+
+    const htmlPath = path.join(distPath, 'index.html');
+    if (!fs.existsSync(htmlPath)) {
+      return this.getErrorHtml('Run "npm run build:webview" first.');
+    }
+
+    let html = fs.readFileSync(htmlPath, 'utf-8');
+
+    // 注入视图模式标识为 sidebar，前端据此渲染列表视图
+    html = html.replace('<head>', `<head><script>window.__VIEW_MODE = 'sidebar'</script>`);
+
+    // 替换 CSS 资源路径为 webview 可访问的 URI
+    html = html.replace(
+      /(<link[^>]*href=")([^"]*)(")/g,
+      (_match: string, p1: string, p2: string, p3: string) => {
+        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
+        return `${p1}${uri}${p3}`;
+      }
+    );
+
+    // 替换 JS 资源路径为 webview 可访问的 URI
+    html = html.replace(
+      /(<script[^>]*src=")([^"]*)(")/g,
+      (_match: string, p1: string, p2: string, p3: string) => {
+        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
+        return `${p1}${uri}${p3}`;
+      }
+    );
+
+    // 注入内容安全策略
+    const csp = `
+      <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none';
+        style-src ${webview.cspSource} 'unsafe-inline';
+        script-src ${webview.cspSource} 'unsafe-inline';
+        img-src ${webview.cspSource} https: data:;
+        font-src ${webview.cspSource};"
+      />`;
+
+    html = html.replace('<head>', `<head>${csp}`);
+
+    return html;
+  }
+
+  /** 构建产物缺失时显示的错误页面 */
+  private getErrorHtml(message: string): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Error</title></head>
+<body style="padding:20px;color:var(--vscode-errorForeground);font-family:var(--vscode-font-family);">
+  <h2>⚠️ Error</h2>
+  <p>${message}</p>
+</body>
+</html>`;
+  }
+}

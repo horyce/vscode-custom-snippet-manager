@@ -1,0 +1,19 @@
+/**
+ * 全局类型声明
+ * 声明 VS Code Webview API 和视图模式标识的全局类型
+ * 这些变量由后端在 HTML 中注入，前端通过 window 对象访问
+ */
+interface VscodeApi {
+  postMessage(msg: unknown): void
+}
+
+declare global {
+  interface Window {
+    /** VS Code Webview API，用于向扩展后端发送消息 */
+    vscode?: VscodeApi
+    /** 视图模式标识，由后端注入，决定渲染侧边栏还是编辑器 */
+    __VIEW_MODE?: 'sidebar' | 'editor'
+  }
+}
+
+export {}

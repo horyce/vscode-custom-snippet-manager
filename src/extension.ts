@@ -1,26 +1,46 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+/**
+ * 扩展入口文件
+ * 负责初始化各服务并注册命令和视图提供者
+ */
 import * as vscode from 'vscode';
+import { WebviewPanel } from './webviewPanel';
+import { SidebarWebviewProvider } from './sidebarWebviewProvider';
+import { SnippetService } from './snippetService';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
+  // 初始化片段数据服务，使用全局存储路径持久化数据
+  const snippetService = new SnippetService(context);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "custom-snippet-manager" is now active!');
+  // 创建侧边栏 Webview 视图提供者，负责渲染片段列表
+  const sidebarProvider = new SidebarWebviewProvider(context.extensionUri, snippetService);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('custom-snippet-manager.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from custom-snippet-manager!');
-	});
+  // 注册侧边栏 Webview 视图，设置为 webview 类型并保留上下文
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SidebarWebviewProvider.viewType,
+      sidebarProvider,
+      {
+        webviewOptions: {
+          // 切换到其他视图时保留 webview 状态，避免重新加载
+          retainContextWhenHidden: true,
+        },
+      }
+    )
+  );
 
-	context.subscriptions.push(disposable);
+  // 注册 openEditor 命令：从侧边栏打开编辑器面板，可传入片段数据进行编辑
+  context.subscriptions.push(
+    vscode.commands.registerCommand('custom-snippet-manager.openEditor', (snippet) => {
+      WebviewPanel.createOrShow(context.extensionUri, snippetService, snippet ?? null);
+    })
+  );
+
+  // 注册 refreshSidebar 命令：编辑器保存/删除片段后刷新侧边栏列表
+  context.subscriptions.push(
+    vscode.commands.registerCommand('custom-snippet-manager.refreshSidebar', () => {
+      sidebarProvider.refresh();
+    })
+  );
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {}
