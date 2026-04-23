@@ -25,6 +25,8 @@ export class WebviewPanel {
   private readonly snippetService: SnippetService;
   /** 需要在面板销毁时一并释放的资源 */
   private disposables: vscode.Disposable[] = [];
+  /** 待发送给 webview 的片段数据，等 webview 就绪后发送 */
+  private pendingSnippet: SnippetData | null = null;
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -93,11 +95,10 @@ export class WebviewPanel {
 
     WebviewPanel.currentPanel = new WebviewPanel(panel, extensionUri, snippetService);
 
-    // 延迟发送片段数据，等待 webview 加载完成后再回填表单
+    // 保存待发送的片段数据，等 webview 发送 editorReady 后再回填表单
+    // 避免使用 setTimeout 固定延迟，确保 webview 完全加载后再通信
     if (snippet) {
-      setTimeout(() => {
-        WebviewPanel.currentPanel?.postToWebview('setSnippet', snippet);
-      }, 300);
+      WebviewPanel.currentPanel.pendingSnippet = snippet;
     }
   }
 
@@ -129,6 +130,14 @@ export class WebviewPanel {
       // 关闭编辑器面板
       case 'closeEditor':
         this.dispose();
+        break;
+
+      // webview 就绪通知，此时前端 Vue 应用已挂载，可以安全发送片段数据
+      case 'editorReady':
+        if (this.pendingSnippet) {
+          this.postToWebview('setSnippet', this.pendingSnippet);
+          this.pendingSnippet = null;
+        }
         break;
     }
   }

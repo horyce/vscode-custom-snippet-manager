@@ -3,6 +3,8 @@
 /**
  * 侧边栏视图组件
  * 点击新建或编辑时通过 postMessage 通知后端打开编辑器面板
+ * 操作按钮使用原生 HTML 确保在 webview 中点击可靠
+ * 删除确认弹窗使用自定义浮层替代 n-modal，避免 teleport 兼容问题
  */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -90,9 +92,10 @@ function handleCreate() {
   postToExt('openEditor', null)
 }
 
-/** 点击列表项，通知后端打开编辑器并传入片段数据 */
+/** 点击编辑按钮，通知后端打开编辑器并传入片段数据 */
+/** 使用展开运算符将 Vue 响应式 Proxy 转为纯对象，确保 postMessage 能正确序列化 */
 function handleEdit(snippet: Snippet) {
-  postToExt('openEditor', snippet)
+  postToExt('openEditor', { ...snippet })
 }
 
 /** 点击删除按钮，弹出确认弹窗 */
@@ -108,17 +111,20 @@ function handleDeleteConfirm() {
   deletingSnippet.value = null
 }
 
+/** 取消删除，关闭弹窗 */
+function handleDeleteCancel() {
+  deletingSnippet.value = null
+}
+
 /** 切换中英文语言 */
 function toggleLocale() {
   locale.value = locale.value === 'zh' ? 'en' : 'zh'
 }
 
-// 监听后端返回的片段列表数据
+// 监听后端返回的片段列表数据（包括删除后自动刷新）
 onExtMessage('snippetsList', (payload) => {
   snippets.value = payload as Snippet[]
 })
-// 删除成功后重新请求列表
-onExtMessage('snippetDeleted', () => postToExt('getSnippets'))
 
 // 组件挂载时请求片段列表
 onMounted(() => {
@@ -198,7 +204,6 @@ onMounted(() => {
           v-for="snippet in filteredSnippets"
           :key="snippet.id"
           class="snippet-item"
-          @click="handleEdit(snippet)"
         >
           <!-- 片段信息：名称、语言标签、前缀、描述 -->
           <div class="item-main">
@@ -217,32 +222,36 @@ onMounted(() => {
               <span v-if="snippet.description" class="item-desc">{{ snippet.description }}</span>
             </div>
           </div>
-          <!-- 删除按钮，悬浮时显示 -->
-          <div class="item-actions" @click.stop>
-            <n-button text size="tiny" type="error" @click="handleDelete(snippet)">
-              <template #icon>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </template>
-            </n-button>
+          <!-- 操作按钮区：使用原生 button 确保点击可靠，悬浮时显示 -->
+          <div class="item-actions">
+            <!-- 编辑按钮 -->
+            <button class="action-btn" :title="t('actions.edit')" @click.stop="handleEdit(snippet)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <!-- 删除按钮 -->
+            <button class="action-btn action-btn-danger" :title="t('actions.delete')" @click.stop="handleDelete(snippet)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 删除确认弹窗 -->
-    <n-modal
-      v-if="deletingSnippet"
-      preset="dialog"
-      :title="t('delete.title')"
-      type="error"
-      :positive-text="t('delete.confirm')"
-      :negative-text="t('delete.cancel')"
-      @positive-click="handleDeleteConfirm"
-      @negative-click="deletingSnippet = null"
-      @close="deletingSnippet = null"
-    >
-      <p>{{ t('delete.content', { name: deletingSnippet?.name }) }}</p>
-    </n-modal>
+    <!-- 删除确认弹窗：自定义浮层，避免 n-modal 的 teleport 兼容问题 -->
+    <div v-if="deletingSnippet" class="modal-overlay" @click.self="handleDeleteCancel">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <span class="modal-title">{{ t('delete.title') }}</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('delete.content', { name: deletingSnippet?.name }) }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" @click="handleDeleteCancel">{{ t('delete.cancel') }}</button>
+          <button class="modal-btn modal-btn-danger" @click="handleDeleteConfirm">{{ t('delete.confirm') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -253,6 +262,7 @@ onMounted(() => {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 /* 顶部标题栏，底部带分隔线 */
@@ -345,7 +355,7 @@ onMounted(() => {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 6px;
-  cursor: pointer;
+  cursor: default;
   transition: background-color 0.15s ease;
 }
 
@@ -417,14 +427,129 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* 删除按钮，默认隐藏，悬浮时显示 */
+/* 操作按钮区：默认隐藏，悬浮时显示 */
 .item-actions {
   flex-shrink: 0;
+  display: flex;
+  gap: 2px;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
 
 .snippet-item:hover .item-actions {
   opacity: 1;
+}
+
+/* 原生操作按钮：重置默认样式，确保点击区域足够大 */
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.action-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(255,255,255,0.08));
+  opacity: 1;
+}
+
+/* 删除按钮悬浮时变红 */
+.action-btn-danger:hover {
+  color: var(--vscode-errorForeground, #f48771);
+  background: rgba(244, 135, 113, 0.1);
+}
+
+/* ===== 删除确认弹窗 ===== */
+
+/* 遮罩层：半透明背景，点击可关闭 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* 弹窗卡片 */
+.modal-dialog {
+  width: 320px;
+  max-width: 90%;
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-panel-border, rgba(255,255,255,0.1));
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 14px 16px 0;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+}
+
+.modal-body {
+  padding: 12px 16px 16px;
+}
+
+.modal-body p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.5;
+}
+
+/* 弹窗底部按钮栏 */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--vscode-panel-border, rgba(255,255,255,0.06));
+}
+
+/* 弹窗按钮基础样式 */
+.modal-btn {
+  padding: 4px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+/* 取消按钮 */
+.modal-btn-cancel {
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  color: var(--vscode-button-secondaryForeground, #fff);
+}
+
+.modal-btn-cancel:hover {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
+/* 危险操作按钮（删除确认） */
+.modal-btn-danger {
+  background: var(--vscode-errorBackground, #5a1d1d);
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.modal-btn-danger:hover {
+  background: rgba(244, 135, 113, 0.2);
 }
 </style>
