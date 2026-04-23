@@ -11,6 +11,7 @@ import type { Snippet } from '../types'
 import { SUPPORTED_LANGUAGES } from '../types'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import LanguageSelect from '../components/LanguageSelect.vue'
+import CodeEditor from '../components/CodeEditor.vue'
 
 const { t } = useI18n()
 
@@ -203,13 +204,12 @@ onMounted(() => {
             <span class="form-hint">{{ t('form.bodyHint') }}</span>
           </label>
           <div class="code-editor-wrapper">
-            <textarea
+            <CodeEditor
               v-model="form.body"
-              class="code-editor"
+              :language="form.language === '*' ? '' : form.language"
               :placeholder="t('form.bodyPlaceholder')"
-              rows="12"
-              @input="clearError('body')"
-            ></textarea>
+              @update:model-value="clearError('body')"
+            />
           </div>
           <transition name="slide-fade">
             <span v-if="errors.body" class="form-error">{{ errors.body }}</span>
@@ -455,6 +455,7 @@ onMounted(() => {
   overflow: hidden;
   border: 1px solid var(--vscode-input-border, rgba(255,255,255,0.12));
   transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--vscode-input-background, rgba(255,255,255,0.04));
 }
 
 .code-editor-wrapper:focus-within {
@@ -465,25 +466,6 @@ onMounted(() => {
 .has-error .code-editor-wrapper {
   border-color: var(--vscode-errorForeground, #f48771);
   box-shadow: 0 0 0 1px var(--vscode-errorForeground, #f48771);
-}
-
-.code-editor {
-  width: 100%;
-  padding: 12px 14px;
-  border: none;
-  background: var(--vscode-input-background, rgba(255,255,255,0.04));
-  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
-  font-family: var(--vscode-editor-font-family, 'Cascadia Code', Consolas, monospace);
-  font-size: var(--vscode-editor-font-size, 13px);
-  line-height: 1.7;
-  resize: vertical;
-  outline: none;
-  min-height: 180px;
-  tab-size: 2;
-}
-
-.code-editor::placeholder {
-  color: var(--vscode-input-placeholderForeground, rgba(255,255,255,0.3));
 }
 
 /* ===== 下拉选择框 ===== */
