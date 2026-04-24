@@ -50,7 +50,7 @@ export default {
     delete: 'Delete',
   },
   lang: {
-    switchTo: '中文',
+    name: 'English',
   },
   error: {
     generic: 'Operation failed, please try again',
