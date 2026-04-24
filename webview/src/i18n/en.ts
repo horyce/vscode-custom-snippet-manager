@@ -20,6 +20,7 @@ export default {
     namePlaceholder: 'Enter snippet name',
     prefix: 'Prefix',
     prefixPlaceholder: 'Enter trigger prefix, e.g. log',
+    prefixNotice: 'Code completion does not support prefixes starting with a number. Use a letter (a-z, A-Z) or underscore (_) as the first character, and avoid numbers or special symbols at the start.',
     body: 'Body',
     bodyPlaceholder: 'Enter snippet body, supports $1, $2, $0 tabstops',
     bodyHint: 'Supports $1, $2, $0 tabstops',
