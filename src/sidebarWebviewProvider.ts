@@ -107,7 +107,9 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
       // 前端切换语言，持久化保存到 globalState
       case 'changeLocale': {
         const locale = msg.payload as string;
-        if (locale === 'zh' || locale === 'en') {
+        // 支持所有已注册的语言标识
+        const validLocales = ['zh', 'zh-TW', 'en', 'ja', 'ko'];
+        if (validLocales.includes(locale)) {
           this.setLocale(locale);
         }
         break;
