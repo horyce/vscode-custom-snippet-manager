@@ -6,7 +6,7 @@
  * 操作按钮使用原生 HTML 确保在 webview 中点击可靠
  * 删除确认弹窗使用自定义浮层替代 n-modal，避免 teleport 兼容问题
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Fuse from 'fuse.js'
@@ -14,6 +14,7 @@ import type { Snippet } from '../types'
 import { SUPPORTED_LANGUAGES } from '../types'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import LanguageSelect from '../components/LanguageSelect.vue'
+import { SUPPORTED_LOCALES } from '../i18n'
 
 const { t, locale } = useI18n()
 
@@ -29,6 +30,54 @@ const deletingSnippet = ref<Snippet | null>(null)
 const errorMessage = ref('')
 // 错误提示自动隐藏定时器
 let errorTimer: ReturnType<typeof setTimeout> | null = null
+
+// 语言切换下拉菜单展开状态
+const localeMenuOpen = ref(false)
+// 语言切换下拉菜单容器引用
+const localeMenuRef = ref<HTMLElement | null>(null)
+
+// 语言切换下拉选项，每种语言用其自身名称显示
+const localeOptions = computed(() =>
+  SUPPORTED_LOCALES.map((l) => ({
+    label: l.label,
+    value: l.value,
+  }))
+)
+
+// 当前选中的语言名称，用于触发器显示
+const currentLocaleLabel = computed(() => {
+  const found = SUPPORTED_LOCALES.find((l) => l.value === locale.value)
+  return found ? found.label : '简体中文'
+})
+
+/** 切换语言，同时通知扩展持久化保存 */
+function changeLocale(val: string) {
+  locale.value = val
+  postToExt('changeLocale', val)
+  localeMenuOpen.value = false
+}
+
+/** 切换语言下拉菜单展开/收起 */
+function toggleLocaleMenu() {
+  localeMenuOpen.value = !localeMenuOpen.value
+}
+
+/** 点击外部关闭语言下拉菜单 */
+function handleLocaleClickOutside(e: MouseEvent) {
+  if (localeMenuRef.value && !localeMenuRef.value.contains(e.target as Node)) {
+    localeMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleLocaleClickOutside)
+  // 组件挂载时请求片段列表
+  postToExt('getSnippets')
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleLocaleClickOutside)
+})
 
 // 语言下拉选项，动态生成以支持 i18n，包含图标信息
 const languageOptions = computed(() => [
@@ -114,12 +163,6 @@ function handleDeleteCancel() {
   deletingSnippet.value = null
 }
 
-/** 切换中英文语言，同时通知扩展持久化保存 */
-function toggleLocale() {
-  locale.value = locale.value === 'zh' ? 'en' : 'zh'
-  postToExt('changeLocale', locale.value)
-}
-
 /** 显示错误提示，3 秒后自动隐藏 */
 function showError(msg: string) {
   errorMessage.value = msg
@@ -150,11 +193,6 @@ onExtMessage('snippetsList', (payload) => {
 onExtMessage('error', (payload) => {
   showError(payload as string)
 })
-
-// 组件挂载时请求片段列表
-onMounted(() => {
-  postToExt('getSnippets')
-})
 </script>
 
 <template>
@@ -177,8 +215,27 @@ onMounted(() => {
           <img src="../assets/logo.png" alt="logo" class="header-logo" />
         </div>
         <h2 class="header-title">{{ t('app.title') }}</h2>
-        <!-- 语言切换按钮 -->
-        <button class="locale-btn" @click="toggleLocale">{{ t('lang.switchTo') }}</button>
+        <!-- 语言切换下拉菜单 -->
+        <div ref="localeMenuRef" class="locale-select">
+          <button class="locale-btn" @click="toggleLocaleMenu">
+            {{ currentLocaleLabel }}
+            <svg class="locale-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <transition name="dropdown">
+            <div v-if="localeMenuOpen" class="locale-dropdown">
+              <div
+                v-for="opt in localeOptions"
+                :key="opt.value"
+                class="locale-option"
+                :class="{ 'is-selected': opt.value === locale }"
+                @click="changeLocale(opt.value)"
+              >
+                <span class="locale-option-label">{{ opt.label }}</span>
+                <svg v-if="opt.value === locale" class="locale-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+          </transition>
+        </div>
       </div>
       <!-- 新建片段按钮，与编辑页 btn-primary 风格统一 -->
       <button class="btn btn-primary create-btn" @click="handleCreate">
@@ -404,8 +461,17 @@ onMounted(() => {
   flex: 1;
 }
 
-/* 语言切换按钮 */
+/* 语言切换下拉菜单容器 */
+.locale-select {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* 语言切换触发按钮，保持原有尺寸 */
 .locale-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   padding: 3px 8px;
   border: 1px solid var(--vscode-input-border, rgba(255,255,255,0.12));
   border-radius: 4px;
@@ -422,6 +488,85 @@ onMounted(() => {
 .locale-btn:hover {
   background: var(--vscode-toolbar-hoverBackground, rgba(255,255,255,0.08));
   border-color: var(--vscode-focusBorder, #007fd4);
+}
+
+/* 下拉箭头 */
+.locale-arrow {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 0.2s;
+}
+
+.locale-select .locale-btn:has(~ .locale-dropdown) .locale-arrow,
+.locale-select .locale-arrow {
+  transform: rotate(0deg);
+}
+
+/* 语言下拉菜单面板 */
+.locale-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 1000;
+  min-width: 120px;
+  border: 1px solid var(--vscode-dropdown-border, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background, #252526);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 4px;
+}
+
+/* 语言选项 */
+.locale-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+  font-size: 12px;
+  transition: background-color 0.1s;
+}
+
+.locale-option:hover {
+  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.08));
+}
+
+/* 已选中状态 */
+.locale-option.is-selected {
+  color: var(--vscode-list-activeSelectionForeground, #fff);
+  font-weight: 600;
+}
+
+.locale-option-label {
+  flex: 1;
+}
+
+/* 选中勾号 */
+.locale-check {
+  flex-shrink: 0;
+  color: var(--vscode-button-background, #0e639c);
+}
+
+/* 下拉菜单动画 */
+.dropdown-enter-active {
+  transition: all 0.15s ease-out;
+}
+
+.dropdown-leave-active {
+  transition: all 0.1s ease-in;
+}
+
+.dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-2px);
 }
 
 /* 新建按钮，与编辑页 btn-primary 统一 */

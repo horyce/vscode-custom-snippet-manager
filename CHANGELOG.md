@@ -15,7 +15,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Sidebar UI**: Webview-based snippet list with fuzzy search (Fuse.js) and language filtering
 - **Editor UI**: Webview-based form with CodeMirror 6 syntax highlighting and input validation
 - **Language Icons**: Iconify-powered language icons in dropdowns and snippet list items
-- **Internationalization**: Full Chinese / English UI support with one-click switching and preference persistence
+- **Internationalization**: Full Simplified Chinese / Traditional Chinese / English / Japanese / Korean UI support with dropdown language switcher and preference persistence
 - **Commands**:
   - `New Snippet` — Open editor to create a new snippet
   - `Open Snippet Library` — Focus the sidebar panel
