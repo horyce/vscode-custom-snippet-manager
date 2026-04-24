@@ -158,6 +158,12 @@ onMounted(() => {
 
     <!-- 表单主体区域 -->
     <div class="editor-body">
+      <!-- 前缀命名规范提示 -->
+      <div class="prefix-notice">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>{{ t('form.prefixNotice') }}</span>
+      </div>
+
       <!-- 名称和前缀并排 -->
       <div class="form-section">
         <div class="form-row">
@@ -337,6 +343,25 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* 前缀命名规范提示横幅 */
+.prefix-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--vscode-inputValidation-warningBackground, #352a05);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #cca700);
+  color: var(--vscode-editorWarning-foreground, #cca700);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.prefix-notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /* 表单分区 */
