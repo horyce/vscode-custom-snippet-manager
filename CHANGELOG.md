@@ -6,6 +6,27 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 [中文更新日志](./CHANGELOG.zh-CN.md)
 
+## [1.1.0] - 2026-05-24
+
+### Added
+
+- **Multi-language Selection**: Snippet language field now supports selecting multiple languages
+- **WebView Dialogs**: Replaced all VS Code native dialogs (import/export confirmations, duplicate handling) with custom WebView-based dialogs that match the plugin's UI style
+- **WebView Notifications**: Replaced VS Code native notifications with custom WebView-based notifications for consistent UI experience
+- **Action Feedback**: Added success notifications for snippet creation, editing, and deletion
+- **Extended Internationalization**: Added support for **Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe** (now 13 languages total)
+
+### Changed
+
+- **Internationalization**: Improved i18n completeness — all UI text now properly switches when changing language
+- **Import/Export**: Import and export result messages now use WebView notifications with proper i18n support
+
+### Removed
+
+- **Redundant Code**: Removed unused change notification system from SnippetService
+- **Redundant i18n Keys**: Cleaned up unused validation and duplicate message keys from all language files
+- **Internal Exports**: Removed unnecessary `export` modifiers from internal interfaces in ImportExportService
+
 ## [1.0.0] - 2026-05-01
 
 ### Added
