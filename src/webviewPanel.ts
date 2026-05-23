@@ -139,8 +139,8 @@ export class WebviewPanel {
         }
         const created = this.snippetService.create(data);
         this.postToWebview('snippetCreated', created);
-        // 通知侧边栏刷新列表
-        vscode.commands.executeCommand('custom-snippet-manager.refreshSidebar');
+        // 通知侧边栏刷新列表并显示成功通知
+        vscode.commands.executeCommand('custom-snippet-manager.createSnippetSuccess', created.name);
         break;
       }
 
@@ -156,7 +156,8 @@ export class WebviewPanel {
         const updated = this.snippetService.update(id, data);
         if (updated) {
           this.postToWebview('snippetUpdated', updated);
-          vscode.commands.executeCommand('custom-snippet-manager.refreshSidebar');
+          // 通知侧边栏刷新列表并显示成功通知
+          vscode.commands.executeCommand('custom-snippet-manager.updateSnippetSuccess', updated.name);
         } else {
           this.postToWebview('error', 'Snippet not found');
         }

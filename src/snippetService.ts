@@ -28,12 +28,6 @@ export interface SnippetData {
   createdAt?: string;
 }
 
-/** 数据变更事件类型 */
-export type SnippetChangeType = 'create' | 'update' | 'delete';
-
-/** 数据变更事件回调函数类型 */
-export type SnippetChangeHandler = (type: SnippetChangeType, snippet: SnippetData) => void;
-
 export class SnippetService {
   /** VS Code 全局存储 URI */
   private readonly storageUri: vscode.Uri;
@@ -41,8 +35,6 @@ export class SnippetService {
   private readonly filePath: string;
   /** 内存中的片段数据缓存 */
   private snippets: SnippetData[] = [];
-  /** 数据变更事件处理器列表 */
-  private changeHandlers: SnippetChangeHandler[] = [];
 
   constructor(context: vscode.ExtensionContext) {
     this.storageUri = context.globalStorageUri;
@@ -85,35 +77,6 @@ export class SnippetService {
     fs.writeFileSync(this.filePath, JSON.stringify(this.snippets, null, 2), 'utf-8');
   }
 
-  /**
-   * 注册数据变更事件处理器
-   * 当片段被创建、更新或删除时，所有注册的处理器都会被调用
-   * @param handler 变更事件回调函数
-   * @returns 取消注册的函数
-   */
-  public onChange(handler: SnippetChangeHandler): () => void {
-    this.changeHandlers.push(handler);
-    // 返回取消注册的函数，方便调用者管理生命周期
-    return () => {
-      this.changeHandlers = this.changeHandlers.filter((h) => h !== handler);
-    };
-  }
-
-  /**
-   * 通知所有变更事件处理器
-   * @param type 变更类型
-   * @param snippet 变更的片段数据
-   */
-  private notifyChange(type: SnippetChangeType, snippet: SnippetData): void {
-    this.changeHandlers.forEach((handler) => {
-      try {
-        handler(type, snippet);
-      } catch {
-        // 处理器异常不影响其他处理器和主流程
-      }
-    });
-  }
-
   /** 获取所有片段的浅拷贝 */
   getAll(): SnippetData[] {
     return [...this.snippets];
@@ -129,7 +92,6 @@ export class SnippetService {
     };
     this.snippets.push(snippet);
     this.save();
-    this.notifyChange('create', snippet);
     return snippet;
   }
 
@@ -143,7 +105,6 @@ export class SnippetService {
     const { usageCount, createdAt } = this.snippets[idx];
     this.snippets[idx] = { id, usageCount, createdAt, ...data };
     this.save();
-    this.notifyChange('update', this.snippets[idx]);
     return this.snippets[idx];
   }
 
@@ -153,10 +114,8 @@ export class SnippetService {
     if (idx === -1) {
       return false;
     }
-    const deleted = this.snippets[idx];
     this.snippets.splice(idx, 1);
     this.save();
-    this.notifyChange('delete', deleted);
     return true;
   }
 
