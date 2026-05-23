@@ -1,0 +1,9 @@
+{
+  "viewsContainers.activitybar.title": "Custom Snippet Manager",
+  "views.sidebar.name": "Snippets",
+  "command.openEditor.title": "New Snippet",
+  "command.openSnippetLibrary.title": "Open Snippet Library",
+  "command.insertSnippet.title": "Insert Snippet",
+  "command.triggerCompletion.title": "Trigger Snippet Completion",
+  "command.saveSelectionToSnippet.title": "Save to Snippet Library"
+}

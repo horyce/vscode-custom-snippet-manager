@@ -51,6 +51,10 @@ export type MessageType =
   | 'exportResult'
   | 'importSnippets'
   | 'importResult'
+  | 'importError'
+  | 'showDuplicateDialog'
+  | 'duplicateStrategyChoice'
+  | 'showNotification'
   | 'error'
 
 /** Webview 发送给扩展的消息格式 */

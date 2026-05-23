@@ -40,10 +40,16 @@ export default {
     content: '确定要删除代码片段「{name}」吗？此操作不可撤销。',
     confirm: '删除',
     cancel: '取消',
+    success: '代码片段「{name}」已删除',
+  },
+  create: {
+    success: '代码片段「{name}」创建成功',
+  },
+  update: {
+    success: '代码片段「{name}」已更新',
   },
   filter: {
     all: '全部',
-    label: '语言筛选',
   },
   actions: {
     create: '新建片段',
@@ -57,21 +63,25 @@ export default {
     exportConfirmContent: '确定要导出当前所有代码片段吗？',
     importConfirmTitle: '导入确认',
     importConfirmContent: '确定要导入代码片段配置吗？导入后数据将不可撤销。',
-    exportSuccess: '导出成功！',
     exportFailed: '导出失败',
-    importSuccess: '导入成功！共导入 {count} 个片段。',
-    importFailed: '导入失败',
-    importPartial: '导入了 {imported} 个片段，{errors} 个出错。',
     noDataToExport: '暂无数据可导出',
+    duplicateTitle: '发现重复片段',
+    duplicateContent: '导入的配置中有 {count} 个片段与现有片段重复，请选择处理方式：',
+    overwrite: '覆盖',
+    overwriteDesc: '用导入的片段替换现有片段',
+    skip: '跳过',
+    skipDesc: '保留现有片段，跳过重复项',
+    merge: '合并',
+    mergeDesc: '保留两者，导入的片段将生成新副本',
+    exportSuccessDetail: '成功导出 {count} 个代码片段',
+    importFileReadError: '无法读取文件：{error}',
+    importInvalidJson: '文件内容不是有效的 JSON 格式',
+    importValidationError: '数据验证失败：{error}',
+    importSuccessDetail: '成功导入 {count} 个代码片段',
+    importPartialDetail: '导入了 {imported} 个片段，{errors} 个出错',
   },
   sort: {
     newestFirst: '由新至旧',
     oldestFirst: '由旧至新',
-  },
-  lang: {
-    name: '简体中文',
-  },
-  error: {
-    generic: '操作失败，请重试',
   },
 }
