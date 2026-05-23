@@ -29,6 +29,8 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
   private readonly importExportService: ImportExportService;
   /** 扩展上下文，用于访问 globalState 持久化语言偏好 */
   private readonly context: vscode.ExtensionContext;
+  /** 重复策略选择的 Promise resolve 回调 */
+  private pendingStrategyResolve: ((strategy: string | null) => void) | null = null;
 
   constructor(extensionUri: vscode.Uri, snippetService: SnippetService, context: vscode.ExtensionContext) {
     this.extensionUri = extensionUri;
@@ -121,18 +123,36 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
 
       // 前端请求导出代码片段
       case 'exportSnippets': {
-        const success = await this.importExportService.exportSnippets();
-        this.postToView('exportResult', { success });
+        const result = await this.importExportService.exportSnippets();
+        this.postToView('exportResult', { success: result.success, count: result.count });
         break;
       }
 
       // 前端请求导入代码片段
       case 'importSnippets': {
-        const result = await this.importExportService.importSnippets();
+        const result = await this.importExportService.importSnippets(
+          (count) => this.askDuplicateStrategyViaWebview(count)
+        );
         if (result) {
-          // 导入成功后刷新列表
-          this.postToView('importResult', result);
-          this.postToView('snippetsList', this.snippetService.getAll());
+          // 检查是否为导入错误（含 errorKey 字段）
+          if ('errorKey' in result) {
+            const err = result as { errorKey: string; errorParams?: Record<string, string | number> };
+            this.postToView('importError', { errorKey: err.errorKey, errorParams: err.errorParams });
+          } else {
+            // 导入成功后刷新列表
+            this.postToView('importResult', result);
+            this.postToView('snippetsList', this.snippetService.getAll());
+          }
+        }
+        break;
+      }
+
+      // 前端返回重复策略选择结果
+      case 'duplicateStrategyChoice': {
+        const strategy = msg.payload as string | null;
+        if (this.pendingStrategyResolve) {
+          this.pendingStrategyResolve(strategy);
+          this.pendingStrategyResolve = null;
         }
         break;
       }
@@ -144,6 +164,32 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     if (this.view) {
       this.postToView('snippetsList', this.snippetService.getAll());
     }
+  }
+
+  /**
+   * 在侧边栏显示通知消息
+   * 由编辑器面板创建/更新片段成功后调用
+   * @param type 通知类型：success / warning / error
+   * @param messageKey i18n 键名（如 create.success、update.success）
+   * @param params i18n 插值参数
+   */
+  public showNotification(type: 'success' | 'warning' | 'error', messageKey: string, params?: Record<string, string>): void {
+    if (this.view) {
+      this.postToView('showNotification', { type, messageKey, params: params ?? {} });
+    }
+  }
+
+  /**
+   * 通过 Webview 自定义对话框询问重复片段处理策略
+   * 发送消息到前端显示对话框，等待用户选择后返回结果
+   * @param count 重复片段数量
+   * @returns 用户选择的策略，null 表示取消
+   */
+  private askDuplicateStrategyViaWebview(count: number): Promise<string | null> {
+    return new Promise((resolve) => {
+      this.pendingStrategyResolve = resolve;
+      this.postToView('showDuplicateDialog', { count });
+    });
   }
 
   /** 向侧边栏 webview 发送消息 */

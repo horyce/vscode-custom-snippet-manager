@@ -33,10 +33,18 @@ const currentSortLabel = computed(() => {
 })
 // 当前待删除的片段，用于弹窗确认
 const deletingSnippet = ref<Snippet | null>(null)
-// 错误提示信息
-const errorMessage = ref('')
-// 错误提示自动隐藏定时器
-let errorTimer: ReturnType<typeof setTimeout> | null = null
+// 通用通知状态
+const notification = ref<{
+  visible: boolean
+  type: 'success' | 'warning' | 'error'
+  message: string
+}>({
+  visible: false,
+  type: 'error',
+  message: '',
+})
+// 通知自动隐藏定时器
+let notificationTimer: ReturnType<typeof setTimeout> | null = null
 
 // 语言切换下拉菜单展开状态
 const localeMenuOpen = ref(false)
@@ -176,7 +184,9 @@ function handleDelete(snippet: Snippet) {
 /** 确认删除，发送删除消息并关闭弹窗 */
 function handleDeleteConfirm() {
   if (deletingSnippet.value) {
+    const name = deletingSnippet.value.name
     postToExt('deleteSnippet', { id: deletingSnippet.value.id })
+    showSuccess(t('delete.success', { name }))
   }
   deletingSnippet.value = null
 }
@@ -186,24 +196,39 @@ function handleDeleteCancel() {
   deletingSnippet.value = null
 }
 
-/** 显示错误提示，3 秒后自动隐藏 */
-function showError(msg: string) {
-  errorMessage.value = msg
-  if (errorTimer) {
-    clearTimeout(errorTimer)
+/** 显示通知提示，3 秒后自动隐藏 */
+function showNotification(type: 'success' | 'warning' | 'error', msg: string) {
+  notification.value = { visible: true, type, message: msg }
+  if (notificationTimer) {
+    clearTimeout(notificationTimer)
   }
-  errorTimer = setTimeout(() => {
-    errorMessage.value = ''
-    errorTimer = null
+  notificationTimer = setTimeout(() => {
+    notification.value.visible = false
+    notificationTimer = null
   }, 3000)
 }
 
-/** 清除错误提示 */
-function clearError() {
-  errorMessage.value = ''
-  if (errorTimer) {
-    clearTimeout(errorTimer)
-    errorTimer = null
+/** 显示错误通知 */
+function showError(msg: string) {
+  showNotification('error', msg)
+}
+
+/** 显示成功通知 */
+function showSuccess(msg: string) {
+  showNotification('success', msg)
+}
+
+/** 显示警告通知 */
+function showWarning(msg: string) {
+  showNotification('warning', msg)
+}
+
+/** 清除通知 */
+function clearNotification() {
+  notification.value.visible = false
+  if (notificationTimer) {
+    clearTimeout(notificationTimer)
+    notificationTimer = null
   }
 }
 
@@ -294,9 +319,9 @@ function handleImport() {
 
 // 监听后端返回的导出结果
 onExtMessage('exportResult', (payload) => {
-  const result = payload as { success: boolean }
+  const result = payload as { success: boolean; count?: number }
   if (result.success) {
-    // 导出成功提示由后端 VS Code 原生通知显示
+    showSuccess(t('importExport.exportSuccessDetail', { count: result.count ?? 0 }))
   } else {
     showError(t('importExport.exportFailed'))
   }
@@ -313,23 +338,76 @@ onExtMessage('importResult', (payload) => {
     errors: string[]
   }
   if (result.errors.length > 0) {
-    showError(
-      t('importExport.importPartial', {
+    showWarning(
+      t('importExport.importPartialDetail', {
         imported: result.imported,
         errors: result.errors.length,
       })
     )
+  } else {
+    showSuccess(
+      t('importExport.importSuccessDetail', { count: result.imported })
+    )
   }
 })
+
+// 监听后端返回的导入错误（文件读取失败、JSON 无效、验证失败等）
+onExtMessage('importError', (payload) => {
+  const data = payload as { errorKey: string; errorParams?: Record<string, string | number> }
+  showError(t(`importExport.${data.errorKey}`, data.errorParams ?? {}))
+})
+
+// 监听后端发送的通知消息（创建/更新片段成功等）
+onExtMessage('showNotification', (payload) => {
+  const data = payload as { type: 'success' | 'warning' | 'error'; messageKey: string; params?: Record<string, string> }
+  const message = t(`${data.messageKey}`, data.params ?? {})
+  if (data.type === 'success') {
+    showSuccess(message)
+  } else if (data.type === 'warning') {
+    showWarning(message)
+  } else {
+    showError(message)
+  }
+})
+
+// 重复片段策略对话框状态
+const duplicateDialog = ref<{
+  visible: boolean
+  count: number
+}>({
+  visible: false,
+  count: 0,
+})
+
+// 监听后端请求显示重复策略对话框
+onExtMessage('showDuplicateDialog', (payload) => {
+  const data = payload as { count: number }
+  duplicateDialog.value = {
+    visible: true,
+    count: data.count,
+  }
+})
+
+/** 用户选择重复处理策略，通知后端 */
+function handleDuplicateStrategy(strategy: string) {
+  duplicateDialog.value.visible = false
+  postToExt('duplicateStrategyChoice', strategy)
+}
+
+/** 用户取消重复策略对话框 */
+function handleDuplicateCancel() {
+  duplicateDialog.value.visible = false
+  postToExt('duplicateStrategyChoice', null)
+}
 </script>
 
 <template>
   <div class="sidebar-view">
-    <!-- 错误提示条 -->
+    <!-- 通用通知条 -->
     <transition name="slide-fade">
-      <div v-if="errorMessage" class="error-bar">
-        <span class="error-text">{{ errorMessage }}</span>
-        <button class="error-close" @click="clearError">
+      <div v-if="notification.visible" class="notification-bar" :class="`notification-${notification.type}`">
+        <span class="notification-text">{{ notification.message }}</span>
+        <button class="notification-close" @click="clearNotification">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -512,6 +590,45 @@ onExtMessage('importResult', (payload) => {
         </div>
       </div>
     </div>
+
+    <!-- 重复片段策略选择对话框 -->
+    <div v-if="duplicateDialog.visible" class="modal-overlay" @click.self="handleDuplicateCancel">
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <span class="modal-title">{{ t('importExport.duplicateTitle') }}</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('importExport.duplicateContent', { count: duplicateDialog.count }) }}</p>
+          <!-- 三个策略选项卡 -->
+          <div class="strategy-options">
+            <button class="strategy-option" @click="handleDuplicateStrategy('overwrite')">
+              <div class="strategy-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span class="strategy-name">{{ t('importExport.overwrite') }}</span>
+              </div>
+              <span class="strategy-desc">{{ t('importExport.overwriteDesc') }}</span>
+            </button>
+            <button class="strategy-option" @click="handleDuplicateStrategy('skip')">
+              <div class="strategy-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <span class="strategy-name">{{ t('importExport.skip') }}</span>
+              </div>
+              <span class="strategy-desc">{{ t('importExport.skipDesc') }}</span>
+            </button>
+            <button class="strategy-option" @click="handleDuplicateStrategy('merge')">
+              <div class="strategy-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
+                <span class="strategy-name">{{ t('importExport.merge') }}</span>
+              </div>
+              <span class="strategy-desc">{{ t('importExport.mergeDesc') }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="handleDuplicateCancel">{{ t('form.cancel') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -525,19 +642,35 @@ onExtMessage('importResult', (payload) => {
   position: relative;
 }
 
-/* ===== 错误提示条 ===== */
-.error-bar {
+/* ===== 通用通知条 ===== */
+.notification-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  background: rgba(244, 135, 113, 0.15);
-  border-bottom: 1px solid rgba(244, 135, 113, 0.3);
-  color: var(--vscode-errorForeground, #f48771);
   font-size: 12px;
+  border-bottom: 1px solid;
 }
 
-.error-text {
+.notification-bar.notification-error {
+  background: rgba(244, 135, 113, 0.15);
+  border-bottom-color: rgba(244, 135, 113, 0.3);
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.notification-bar.notification-warning {
+  background: rgba(234, 179, 8, 0.15);
+  border-bottom-color: rgba(234, 179, 8, 0.3);
+  color: var(--vscode-notificationsWarningIcon-foreground, #cca700);
+}
+
+.notification-bar.notification-success {
+  background: rgba(95, 189, 126, 0.15);
+  border-bottom-color: rgba(95, 189, 126, 0.3);
+  color: var(--vscode-notificationsInfoIcon-foreground, #3794ff);
+}
+
+.notification-text {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -545,7 +678,7 @@ onExtMessage('importResult', (payload) => {
   white-space: nowrap;
 }
 
-.error-close {
+.notification-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -555,14 +688,16 @@ onExtMessage('importResult', (payload) => {
   border: none;
   border-radius: 3px;
   background: transparent;
-  color: var(--vscode-errorForeground, #f48771);
+  color: inherit;
   cursor: pointer;
   flex-shrink: 0;
   margin-left: 8px;
+  opacity: 0.7;
 }
 
-.error-close:hover {
-  background: rgba(244, 135, 113, 0.2);
+.notification-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* 错误提示动画 */
@@ -1056,6 +1191,59 @@ onExtMessage('importResult', (payload) => {
   gap: 8px;
   padding: 14px 18px;
   border-top: 1px solid var(--vscode-panel-border, rgba(255,255,255,0.06));
+}
+
+/* 重复策略对话框加宽 */
+.modal-dialog-lg {
+  width: 400px;
+}
+
+/* 策略选项列表 */
+.strategy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* 单个策略选项按钮 */
+.strategy-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--vscode-input-border, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  background: var(--vscode-input-background, rgba(255,255,255,0.04));
+  color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.strategy-option:hover {
+  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.08));
+  border-color: var(--vscode-focusBorder, #007fd4);
+}
+
+/* 策略选项标题行：图标 + 名称 */
+.strategy-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strategy-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 策略选项描述文字 */
+.strategy-desc {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  padding-left: 24px;
 }
 
 /* ===== 共享样式：与编辑页统一 ===== */

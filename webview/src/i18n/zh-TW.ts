@@ -40,10 +40,16 @@ export default {
     content: '確定要刪除程式碼片段「{name}」嗎？此操作無法撤銷。',
     confirm: '刪除',
     cancel: '取消',
+    success: '程式碼片段「{name}」已刪除',
+  },
+  create: {
+    success: '程式碼片段「{name}」建立成功',
+  },
+  update: {
+    success: '程式碼片段「{name}」已更新',
   },
   filter: {
     all: '全部',
-    label: '語言篩選',
   },
   actions: {
     create: '新建片段',
@@ -57,21 +63,25 @@ export default {
     exportConfirmContent: '確定要匯出目前所有程式碼片段嗎？',
     importConfirmTitle: '匯入確認',
     importConfirmContent: '確定要匯入程式碼片段配置嗎？匯入後資料將無法撤銷。',
-    exportSuccess: '匯出成功！',
     exportFailed: '匯出失敗',
-    importSuccess: '匯入成功！共匯入 {count} 個片段。',
-    importFailed: '匯入失敗',
-    importPartial: '匯入了 {imported} 個片段，{errors} 個出錯。',
     noDataToExport: '暫無資料可匯出',
+    duplicateTitle: '發現重複片段',
+    duplicateContent: '匯入的配置中有 {count} 個片段與現有片段重複，請選擇處理方式：',
+    overwrite: '覆蓋',
+    overwriteDesc: '用匯入的片段替換現有片段',
+    skip: '跳過',
+    skipDesc: '保留現有片段，跳過重複項',
+    merge: '合併',
+    mergeDesc: '保留兩者，匯入的片段將生成新副本',
+    exportSuccessDetail: '成功匯出 {count} 個程式碼片段',
+    importFileReadError: '無法讀取檔案：{error}',
+    importInvalidJson: '檔案內容不是有效的 JSON 格式',
+    importValidationError: '資料驗證失敗：{error}',
+    importSuccessDetail: '成功匯入 {count} 個程式碼片段',
+    importPartialDetail: '匯入了 {imported} 個片段，{errors} 個出錯',
   },
   sort: {
     newestFirst: '由新至舊',
     oldestFirst: '由舊至新',
-  },
-  lang: {
-    name: '繁體中文',
-  },
-  error: {
-    generic: '操作失敗，請重試',
   },
 }

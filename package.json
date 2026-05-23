@@ -67,7 +67,7 @@
       "activitybar": [
         {
           "id": "custom-snippet-manager",
-          "title": "Custom Snippet Manager",
+          "title": "%viewsContainers.activitybar.title%",
           "icon": "resources/icon.svg"
         }
       ]
@@ -77,7 +77,7 @@
         {
           "type": "webview",
           "id": "custom-snippet-manager.sidebar",
-          "name": "Snippets",
+          "name": "%views.sidebar.name%",
           "icon": "resources/icon.svg"
         }
       ]
@@ -85,24 +85,24 @@
     "commands": [
       {
         "command": "custom-snippet-manager.openEditor",
-        "title": "New Snippet",
+        "title": "%command.openEditor.title%",
         "icon": "$(add)"
       },
       {
         "command": "custom-snippet-manager.openSnippetLibrary",
-        "title": "Open Snippet Library"
+        "title": "%command.openSnippetLibrary.title%"
       },
       {
         "command": "custom-snippet-manager.insertSnippet",
-        "title": "Insert Snippet"
+        "title": "%command.insertSnippet.title%"
       },
       {
         "command": "custom-snippet-manager.triggerCompletion",
-        "title": "Trigger Snippet Completion"
+        "title": "%command.triggerCompletion.title%"
       },
       {
         "command": "custom-snippet-manager.saveSelectionToSnippet",
-        "title": "Save to Snippet Library"
+        "title": "%command.saveSelectionToSnippet.title%"
       }
     ],
     "keybindings": [

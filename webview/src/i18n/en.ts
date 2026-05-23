@@ -40,10 +40,16 @@ export default {
     content: 'Are you sure you want to delete snippet "{name}"? This action cannot be undone.',
     confirm: 'Delete',
     cancel: 'Cancel',
+    success: 'Snippet "{name}" has been deleted',
+  },
+  create: {
+    success: 'Snippet "{name}" created successfully',
+  },
+  update: {
+    success: 'Snippet "{name}" updated successfully',
   },
   filter: {
     all: 'All',
-    label: 'Language Filter',
   },
   actions: {
     create: 'New Snippet',
@@ -57,21 +63,25 @@ export default {
     exportConfirmContent: 'Are you sure you want to export all snippets?',
     importConfirmTitle: 'Import Confirmation',
     importConfirmContent: 'Are you sure you want to import snippets? This action cannot be undone.',
-    exportSuccess: 'Export successful!',
     exportFailed: 'Export failed',
-    importSuccess: 'Import successful! {count} snippet(s) imported.',
-    importFailed: 'Import failed',
-    importPartial: 'Imported {imported} snippet(s) with {errors} error(s).',
     noDataToExport: 'No data to export',
+    duplicateTitle: 'Duplicate Snippets Found',
+    duplicateContent: '{count} snippet(s) in the import file already exist. How would you like to handle them?',
+    overwrite: 'Overwrite',
+    overwriteDesc: 'Replace existing snippets with imported ones',
+    skip: 'Skip',
+    skipDesc: 'Keep existing snippets, skip duplicates',
+    merge: 'Merge',
+    mergeDesc: 'Keep both, imported snippets will be created as copies',
+    exportSuccessDetail: 'Successfully exported {count} snippet(s)',
+    importFileReadError: 'Cannot read file: {error}',
+    importInvalidJson: 'File content is not valid JSON',
+    importValidationError: 'Data validation failed: {error}',
+    importSuccessDetail: 'Successfully imported {count} snippet(s)',
+    importPartialDetail: 'Imported {imported} snippet(s) with {errors} error(s)',
   },
   sort: {
     newestFirst: 'Newest First',
     oldestFirst: 'Oldest First',
-  },
-  lang: {
-    name: 'English',
-  },
-  error: {
-    generic: 'Operation failed, please try again',
   },
 }
