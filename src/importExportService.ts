@@ -276,6 +276,13 @@ export class ImportExportService {
       return this.getI18nText('validationEmptyPrefix', String(index + 1));
     }
 
+    // 检查 language 字段：支持逗号分隔的多语言，每个值必须非空
+    const langValue = s.language as string;
+    const langParts = langValue.split(',').map((l: string) => l.trim()).filter(Boolean);
+    if (langParts.length === 0) {
+      return this.getI18nText('validationEmptyLanguage', String(index + 1));
+    }
+
     // 如果存在 usageCount，必须为非负数字
     if (s.usageCount !== undefined && (typeof s.usageCount !== 'number' || s.usageCount < 0)) {
       return this.getI18nText('validationInvalidUsageCount', String(index + 1));
@@ -516,6 +523,10 @@ export class ImportExportService {
       validationEmptyPrefix: {
         zh: '第 {0} 个片段前缀为空',
         en: 'Snippet #{0} has empty prefix',
+      },
+      validationEmptyLanguage: {
+        zh: '第 {0} 个片段语言为空',
+        en: 'Snippet #{0} has empty language',
       },
       validationInvalidUsageCount: {
         zh: '第 {0} 个片段的使用次数字段无效',
