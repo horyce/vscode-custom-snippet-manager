@@ -134,11 +134,12 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      // 筛选适用于当前语言的片段
+      // 筛选适用于当前语言的片段（language 字段支持逗号分隔的多语言）
       const currentLang = editor.document.languageId;
-      const matchedSnippets = allSnippets.filter((s) =>
-        s.language === '*' || s.language === currentLang
-      );
+      const matchedSnippets = allSnippets.filter((s) => {
+        const langs = s.language.split(',');
+        return langs.includes('*') || langs.includes(currentLang);
+      });
 
       // 当前语言没有匹配的片段
       if (matchedSnippets.length === 0) {

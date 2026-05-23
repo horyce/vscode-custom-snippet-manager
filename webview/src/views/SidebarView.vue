@@ -105,10 +105,13 @@ const languageOptions = computed(() => [
 const filteredSnippets = computed(() => {
   let result = snippets.value
 
-  // 按语言筛选
+  // 按语言筛选：片段的 language 字段支持逗号分隔的多语言
   if (languageFilter.value && languageFilter.value !== '*') {
     result = result.filter(
-      (s) => s.language === languageFilter.value || s.language === '*'
+      (s) => {
+        const langs = s.language.split(',')
+        return langs.includes('*') || langs.includes(languageFilter.value)
+      }
     )
   }
 
@@ -449,11 +452,13 @@ onExtMessage('importResult', (payload) => {
               <span class="item-name">{{ snippet.name }}</span>
               <!-- 语言标签，使用 Iconify 图标 + 品牌色 -->
               <span
+                v-for="lang in snippet.language.split(',')"
+                :key="lang"
                 class="lang-badge"
-                :style="{ backgroundColor: getLanguageColor(snippet.language) + '22', color: getLanguageColor(snippet.language), borderColor: getLanguageColor(snippet.language) + '44' }"
+                :style="{ backgroundColor: getLanguageColor(lang) + '22', color: getLanguageColor(lang), borderColor: getLanguageColor(lang) + '44' }"
               >
-                <Icon v-if="snippet.language !== '*'" :icon="getLanguageIconify(snippet.language)" class="lang-badge-icon" />
-                <span class="lang-badge-text">{{ snippet.language === '*' ? t('form.allLanguages') : snippet.language }}</span>
+                <Icon v-if="lang !== '*'" :icon="getLanguageIconify(lang)" class="lang-badge-icon" />
+                <span class="lang-badge-text">{{ lang === '*' ? t('form.allLanguages') : lang }}</span>
               </span>
             </div>
             <div class="item-meta">

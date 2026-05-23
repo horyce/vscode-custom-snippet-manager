@@ -27,7 +27,7 @@ export default {
     description: '描述',
     descriptionPlaceholder: '输入代码片段描述',
     language: '适用语言',
-    languagePlaceholder: '选择适用语言',
+    languagePlaceholder: '选择适用语言（支持多选）',
     allLanguages: '所有语言',
     save: '保存',
     cancel: '取消',
