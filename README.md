@@ -41,7 +41,7 @@
 
 ![language](./resources/lang.png)
 
-* Supports 简体中文 / 繁體中文 / English / 日本語 / 한국어
+* Supports 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe
 * Easily switch between languages
 * Language preference is saved automatically
 
