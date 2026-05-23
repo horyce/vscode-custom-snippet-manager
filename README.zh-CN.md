@@ -41,7 +41,8 @@
 
 ![language](./resources/lang.png)
 
-* 支持 简体中文 / 繁體中文 / English / 日本語 / 한국어 
+* 支持 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe
+
 * 一键切换语言
 * 自动记住用户语言偏好
 
