@@ -140,23 +140,28 @@ export class SnippetCompletionProvider implements vscode.CompletionItemProvider 
 
   /**
    * 根据当前编辑器语言筛选适用的片段
+   * language 字段支持逗号分隔的多语言，如 "javascript,typescript"
    * language 为 '*' 的片段适用于所有语言
    * 特定语言的片段通过 LANGUAGE_ALIASES 映射匹配
    */
   private filterByLanguage(snippets: SnippetData[], currentLang: string): SnippetData[] {
     return snippets.filter((snippet) => {
-      // 所有语言都匹配
-      if (snippet.language === '*') {
-        return true;
-      }
-      // 精确匹配
-      if (snippet.language === currentLang) {
-        return true;
-      }
-      // 通过别名映射匹配
-      const aliases = LANGUAGE_ALIASES[snippet.language];
-      if (aliases && aliases.includes(currentLang)) {
-        return true;
+      // 拆分多语言字段
+      const langs = snippet.language.split(',');
+      for (const lang of langs) {
+        // 所有语言都匹配
+        if (lang === '*') {
+          return true;
+        }
+        // 精确匹配
+        if (lang === currentLang) {
+          return true;
+        }
+        // 通过别名映射匹配
+        const aliases = LANGUAGE_ALIASES[lang];
+        if (aliases && aliases.includes(currentLang)) {
+          return true;
+        }
       }
       return false;
     });
@@ -171,8 +176,9 @@ export class SnippetCompletionProvider implements vscode.CompletionItemProvider 
     if (snippet.description) {
       doc += snippet.description + '\n\n';
     }
-    // 代码预览使用对应语言的语法高亮
-    doc += '```' + (snippet.language === '*' ? '' : snippet.language) + '\n';
+    // 代码预览使用对应语言的语法高亮（多语言时取第一个）
+    const primaryLang = snippet.language.split(',')[0];
+    doc += '```' + (primaryLang === '*' ? '' : primaryLang) + '\n';
     doc += snippet.body;
     doc += '\n```';
     return doc;

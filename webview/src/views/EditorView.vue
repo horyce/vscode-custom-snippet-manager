@@ -242,6 +242,7 @@ onMounted(() => {
               :options="languageOptions"
               :placeholder="t('form.languagePlaceholder')"
               placement="top"
+              multiple
             />
           </div>
         </div>

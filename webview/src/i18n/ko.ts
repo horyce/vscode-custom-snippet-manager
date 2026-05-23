@@ -27,7 +27,7 @@ export default {
     description: '설명',
     descriptionPlaceholder: '스니펫 설명 입력',
     language: '대상 언어',
-    languagePlaceholder: '대상 언어 선택',
+    languagePlaceholder: '대상 언어 선택 (다중 선택 가능)',
     allLanguages: '모든 언어',
     save: '저장',
     cancel: '취소',
