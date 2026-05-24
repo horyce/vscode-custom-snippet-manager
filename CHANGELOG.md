@@ -11,6 +11,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Fixed
 
 - **App Version in Export**: Fixed `APP_VERSION` being hardcoded as `'1.0.0'` in `importExportService.ts`, now dynamically reads version from `package.json` so exported files always contain the correct `appVersion`
+- **C/C++ Completion**: Fixed `LANGUAGE_ALIASES` mapping overlap where `cpp` snippets incorrectly triggered in `c` files; `cpp` now only matches `cpp` language
 
 ## [1.1.1] - 2026-05-24
 

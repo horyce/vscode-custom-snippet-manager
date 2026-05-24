@@ -20,7 +20,7 @@ const LANGUAGE_ALIASES: Record<string, string[]> = {
   markdown: ['markdown'],
   java: ['java'],
   csharp: ['csharp'],
-  cpp: ['cpp', 'c'],
+  cpp: ['cpp'],
   c: ['c'],
   go: ['go'],
   rust: ['rust'],
