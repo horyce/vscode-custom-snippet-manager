@@ -315,14 +315,17 @@ export class ImportExportService {
 
   /**
    * 查找导入数据与现有数据中的重复片段
-   * 以 id 相同判定为重复
+   * 以 id 相同 或 name+prefix 相同判定为重复
    * @param incoming 导入的片段列表
    * @param existing 现有的片段列表
    * @returns 重复的片段列表
    */
   private findDuplicates(incoming: SnippetData[], existing: SnippetData[]): SnippetData[] {
     const existingIds = new Set(existing.map((s) => s.id));
-    return incoming.filter((s) => existingIds.has(s.id));
+    const existingNamePrefix = new Set(existing.map((s) => `${s.name}||${s.prefix}`));
+    return incoming.filter(
+      (s) => existingIds.has(s.id) || existingNamePrefix.has(`${s.name}||${s.prefix}`)
+    );
   }
 
   /**
@@ -348,12 +351,24 @@ export class ImportExportService {
     };
 
     const existingIds = new Set(existing.map((s) => s.id));
+    // 构建 name+prefix 到现有片段的映射，用于按名称+前缀匹配时的覆盖操作
+    const namePrefixMap = new Map<string, SnippetData>();
+    for (const s of existing) {
+      const key = `${s.name}||${s.prefix}`;
+      if (!namePrefixMap.has(key)) {
+        namePrefixMap.set(key, s);
+      }
+    }
     // 收集所有导入操作，最后一次性写入文件
     const operations: ImportOperation[] = [];
 
     for (const snippet of incoming) {
       try {
-        const isDuplicate = existingIds.has(snippet.id);
+        const isIdDuplicate = existingIds.has(snippet.id);
+        const namePrefixKey = `${snippet.name}||${snippet.prefix}`;
+        // 仅在 id 不重复时检查 name+prefix，避免同一条片段被双重判定
+        const isNamePrefixDuplicate = !isIdDuplicate && namePrefixMap.has(namePrefixKey);
+        const isDuplicate = isIdDuplicate || isNamePrefixDuplicate;
 
         // 导入时过滤掉 id、usageCount 和 createdAt，由 create 方法自动补充新 id 和默认值
         const { id, usageCount, createdAt, ...snippetData } = snippet;
@@ -361,8 +376,14 @@ export class ImportExportService {
         if (isDuplicate) {
           switch (strategy) {
             case 'overwrite':
-              // 覆盖：更新现有片段（保留原有的 usageCount 和 createdAt）
-              operations.push({ type: 'update', id: snippet.id, data: snippetData });
+              if (isIdDuplicate) {
+                // id 重复：按原始 id 更新
+                operations.push({ type: 'update', id: snippet.id, data: snippetData });
+              } else {
+                // name+prefix 重复：按现有片段的 id 更新
+                const existingSnippet = namePrefixMap.get(namePrefixKey)!;
+                operations.push({ type: 'update', id: existingSnippet.id, data: snippetData });
+              }
               result.overwritten++;
               result.imported++;
               break;
