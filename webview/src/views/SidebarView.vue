@@ -181,12 +181,10 @@ function handleDelete(snippet: Snippet) {
   deletingSnippet.value = snippet
 }
 
-/** 确认删除，发送删除消息并关闭弹窗 */
+/** 确认删除，发送删除消息并关闭弹窗（成功通知由后端确认后发送） */
 function handleDeleteConfirm() {
   if (deletingSnippet.value) {
-    const name = deletingSnippet.value.name
     postToExt('deleteSnippet', { id: deletingSnippet.value.id })
-    showSuccess(t('delete.success', { name }))
   }
   deletingSnippet.value = null
 }
