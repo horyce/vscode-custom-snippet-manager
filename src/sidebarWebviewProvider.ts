@@ -125,10 +125,14 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
           this.postToView('error', 'Invalid snippet ID');
           return;
         }
+        // 删除前获取片段名称，用于通知
+        const allSnippets = this.snippetService.getAll();
+        const snippetToDelete = allSnippets.find(s => s.id === id);
         const success = this.snippetService.delete(id);
         if (success) {
-          // 删除成功后刷新列表
+          // 删除成功后刷新列表并发送通知
           this.postToView('snippetsList', this.snippetService.getAll());
+          this.showNotification('success', 'delete.success', { name: snippetToDelete?.name ?? '' });
         } else {
           this.postToView('error', 'Snippet not found');
         }
