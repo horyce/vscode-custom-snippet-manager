@@ -11,6 +11,7 @@
 ### 修复
 
 - **导出版本号**：修复 `importExportService.ts` 中 `APP_VERSION` 硬编码为 `'1.0.0'` 的问题，改为从 `package.json` 动态读取版本号，确保导出文件中的 `appVersion` 字段始终准确
+- **C/C++补全**：修复 `LANGUAGE_ALIASES` 中 `cpp` 和 `c` 映射重叠的问题，C++片段不再在C文件中错误触发补全
 
 ## [1.1.1] - 2026-05-24
 
