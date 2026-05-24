@@ -14,6 +14,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Editor Panel Reuse**: Fixed editor panel not clearing the form when switching from edit mode to create mode; the form now resets correctly
 - **Editor Panel Title**: Fixed panel title always showing "New Snippet" in edit mode; now correctly displays "Edit: {name}"
 - **Language Field Matching**: Fixed language filtering and completion failing when the language field contains spaces after commas; language values are now automatically normalized
+- **Import Hang Prevention**: Added 5-minute timeout and cleanup mechanism for the duplicate strategy dialog, preventing the import flow from hanging indefinitely if the sidebar is closed
 
 ## [1.1.2] - 2026-05-24
 

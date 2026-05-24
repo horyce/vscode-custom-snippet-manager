@@ -31,6 +31,8 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
   private readonly context: vscode.ExtensionContext;
   /** 重复策略选择的 Promise resolve 回调 */
   private pendingStrategyResolve: ((strategy: string | null) => void) | null = null;
+  /** 重复策略选择的超时定时器 */
+  private pendingStrategyTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(extensionUri: vscode.Uri, snippetService: SnippetService, context: vscode.ExtensionContext) {
     this.extensionUri = extensionUri;
@@ -72,6 +74,9 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     _token: vscode.CancellationToken
   ): void {
     this.view = webviewView;
+
+    // Webview 重新加载时，清理可能残留的重复策略回调
+    this.cleanupPendingStrategy();
 
     // 配置 webview 选项：启用脚本并限制资源加载范围
     webviewView.webview.options = {
@@ -170,6 +175,11 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
       case 'duplicateStrategyChoice': {
         const strategy = msg.payload as string | null;
         if (this.pendingStrategyResolve) {
+          // 清除超时定时器
+          if (this.pendingStrategyTimer) {
+            clearTimeout(this.pendingStrategyTimer);
+            this.pendingStrategyTimer = null;
+          }
           this.pendingStrategyResolve(strategy);
           this.pendingStrategyResolve = null;
         }
@@ -201,14 +211,35 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
   /**
    * 通过 Webview 自定义对话框询问重复片段处理策略
    * 发送消息到前端显示对话框，等待用户选择后返回结果
+   * 超时 5 分钟自动取消，防止 Webview 被关闭后 Promise 永远挂起
    * @param count 重复片段数量
-   * @returns 用户选择的策略，null 表示取消
+   * @returns 用户选择的策略，null 表示取消或超时
    */
   private askDuplicateStrategyViaWebview(count: number): Promise<string | null> {
     return new Promise((resolve) => {
+      // 清理上一次可能残留的回调（防御性处理）
+      this.cleanupPendingStrategy();
       this.pendingStrategyResolve = resolve;
+      // 5 分钟超时，自动取消等待
+      this.pendingStrategyTimer = setTimeout(() => {
+        this.pendingStrategyResolve = null;
+        this.pendingStrategyTimer = null;
+        resolve(null);
+      }, 5 * 60 * 1000);
       this.postToView('showDuplicateDialog', { count });
     });
+  }
+
+  /** 清理残留的重复策略回调，用于 Webview 重新加载或关闭时 */
+  private cleanupPendingStrategy(): void {
+    if (this.pendingStrategyTimer) {
+      clearTimeout(this.pendingStrategyTimer);
+      this.pendingStrategyTimer = null;
+    }
+    if (this.pendingStrategyResolve) {
+      this.pendingStrategyResolve(null);
+      this.pendingStrategyResolve = null;
+    }
   }
 
   /** 向侧边栏 webview 发送消息 */
