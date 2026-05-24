@@ -28,6 +28,8 @@ export class WebviewPanel {
   private disposables: vscode.Disposable[] = [];
   /** 待发送给 webview 的片段数据，等 webview 就绪后发送 */
   private pendingSnippet: SnippetData | null = null;
+  /** 当前正在编辑的片段引用，用于更新面板标题 */
+  private currentSnippet: SnippetData | null = null;
   /** 扩展上下文，用于读取 globalState 中的语言偏好 */
   private readonly context: vscode.ExtensionContext;
 
@@ -80,12 +82,15 @@ export class WebviewPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // 面板已存在时复用，并发送片段数据（编辑模式）
+    // 面板已存在时复用，并发送片段数据（编辑模式）或清空表单（新建模式）
     if (WebviewPanel.currentPanel) {
       WebviewPanel.currentPanel.panel.reveal(column);
-      if (snippet) {
-        WebviewPanel.currentPanel.postToWebview('setSnippet', snippet);
-      }
+      // 无论编辑还是新建，都发送 setSnippet 消息
+      // 编辑模式传入片段数据，新建模式传入 null 清空表单
+      WebviewPanel.currentPanel.postToWebview('setSnippet', snippet ?? null);
+      // 更新当前编辑的片段引用和面板标题
+      WebviewPanel.currentPanel.currentSnippet = snippet ?? null;
+      WebviewPanel.currentPanel.updateTitle();
       return;
     }
 
@@ -111,13 +116,15 @@ export class WebviewPanel {
     // 避免使用 setTimeout 固定延迟，确保 webview 完全加载后再通信
     if (snippet) {
       WebviewPanel.currentPanel.pendingSnippet = snippet;
+      // 初始化当前编辑片段引用
+      WebviewPanel.currentPanel.currentSnippet = snippet;
     }
   }
 
   /** 更新面板标题，反映当前编辑状态 */
   private updateTitle(): void {
-    if (this.pendingSnippet) {
-      this.panel.title = `Edit: ${this.pendingSnippet.name}`;
+    if (this.currentSnippet) {
+      this.panel.title = `Edit: ${this.currentSnippet.name}`;
     } else {
       this.panel.title = 'New Snippet';
     }
@@ -173,7 +180,10 @@ export class WebviewPanel {
       case 'editorReady':
         if (this.pendingSnippet) {
           this.postToWebview('setSnippet', this.pendingSnippet);
+          // 同步更新当前编辑片段引用和面板标题
+          this.currentSnippet = this.pendingSnippet;
           this.pendingSnippet = null;
+          this.updateTitle();
         }
         break;
     }

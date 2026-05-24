@@ -11,6 +11,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Fixed
 
 - **Import ID Overwrite**: Fixed imported snippets keeping their original `id` instead of generating new ones, which caused duplicate IDs when using the merge strategy and incorrect IDs for non-duplicate imports
+- **Editor Panel Reuse**: Fixed editor panel not clearing the form when switching from edit mode to create mode; the form now resets correctly
+- **Editor Panel Title**: Fixed panel title always showing "New Snippet" in edit mode; now correctly displays "Edit: {name}"
 
 ## [1.1.2] - 2026-05-24
 
