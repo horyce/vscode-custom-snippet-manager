@@ -20,6 +20,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Language Field Matching**: Fixed language filtering and completion failing when the language field contains spaces after commas; language values are now automatically normalized
 - **Import Hang Prevention**: Added 5-minute timeout and cleanup mechanism for the duplicate strategy dialog, preventing the import flow from hanging indefinitely if the sidebar is closed
 - **Editor Panel Language Sync**: Fixed language changes not taking effect in the editor panel while it's open; language settings now sync in real-time
+- **Delete Notification Timing**: Fixed success notification showing before backend confirms deletion; notification now only appears after successful deletion
 
 ## [1.1.2] - 2026-05-24
 
