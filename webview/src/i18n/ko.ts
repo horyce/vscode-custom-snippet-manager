@@ -103,5 +103,13 @@ export default {
     description: '커스텀 코드 스니펫을 관리하고 사용하여 생산성 향상',
     openDirectory: '스니펫 저장 폴더 열기',
     storagePath: '저장 경로',
+    clearAllData: '모든 데이터 삭제',
+  },
+  clearAll: {
+    title: '데이터 삭제 확인',
+    content: '모든 스니펫을 삭제하시겠습니까? 이 작업은 취소할 수 없으며 모든 스니펫이 영구적으로 삭제됩니다.',
+    confirm: '삭제',
+    cancel: '취소',
+    success: '{count}개의 스니펫이 삭제되었습니다',
   },
 }

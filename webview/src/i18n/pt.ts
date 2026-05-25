@@ -103,5 +103,13 @@ export default {
     description: 'Gerencie e use snippets de código personalizados para aumentar a produtividade',
     openDirectory: 'Abrir pasta de snippets',
     storagePath: 'Caminho de armazenamento',
+    clearAllData: 'Limpar todos os dados',
+  },
+  clearAll: {
+    title: 'Confirmar limpeza',
+    content: 'Tem certeza de que deseja limpar todos os snippets? Esta ação não pode ser desfeita e todos os snippets serão excluídos permanentemente.',
+    confirm: 'Limpar',
+    cancel: 'Cancelar',
+    success: '{count} snippet(s) limpo(s)',
   },
 }

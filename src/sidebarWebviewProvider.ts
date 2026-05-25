@@ -232,6 +232,14 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         }
         break;
       }
+
+      // 前端请求清空所有片段数据
+      case 'clearAllSnippets': {
+        const count = await this.snippetService.clearAll();
+        this.postToView('snippetsList', this.snippetService.getAll());
+        this.showNotification('success', 'clearAll.success', { count: String(count) });
+        break;
+      }
     }
   }
 

@@ -103,5 +103,13 @@ export default {
     description: 'Gérez et utilisez des snippets de code personnalisés pour gagner en productivité',
     openDirectory: 'Ouvrir le dossier des snippets',
     storagePath: 'Chemin de stockage',
+    clearAllData: 'Effacer toutes les données',
+  },
+  clearAll: {
+    title: 'Confirmer la suppression',
+    content: 'Voulez-vous vraiment effacer tous les snippets ? Cette action est irréversible et tous les snippets seront définitivement supprimés.',
+    confirm: 'Effacer',
+    cancel: 'Annuler',
+    success: '{count} snippet(s) effacé(s)',
   },
 }

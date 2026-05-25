@@ -103,5 +103,13 @@ export default {
     description: 'カスタムコードスニペットを管理・使用して生産性を向上',
     openDirectory: 'スニペット保存先を開く',
     storagePath: '保存先パス',
+    clearAllData: 'すべてのデータを消去',
+  },
+  clearAll: {
+    title: 'データ消去の確認',
+    content: 'すべてのスニペットを消去してよろしいですか？この操作は取り消せず、すべてのスニペットが永久に削除されます。',
+    confirm: '消去',
+    cancel: 'キャンセル',
+    success: '{count} 件のスニペットを消去しました',
   },
 }
