@@ -5,41 +5,7 @@
  */
 import * as vscode from 'vscode';
 import { SnippetService, SnippetData } from './snippetService';
-
-/**
- * VS Code 语言标识符到片段 language 值的别名映射
- * 用于将片段的 language 属性映射到 VS Code 实际使用的 languageId
- * 例如：片段 language 为 'javascript' 时，在 javascriptreact 文件中也应生效
- */
-const LANGUAGE_ALIASES: Record<string, string[]> = {
-  javascript: ['javascript', 'javascriptreact'],
-  typescript: ['typescript', 'typescriptreact'],
-  html: ['html'],
-  css: ['css'],
-  json: ['json'],
-  markdown: ['markdown'],
-  java: ['java'],
-  csharp: ['csharp'],
-  cpp: ['cpp'],
-  c: ['c'],
-  go: ['go'],
-  rust: ['rust'],
-  php: ['php'],
-  ruby: ['ruby'],
-  swift: ['swift'],
-  kotlin: ['kotlin'],
-  vue: ['vue'],
-  scss: ['scss'],
-  less: ['less'],
-  shellscript: ['shellscript'],
-  sql: ['sql'],
-  yaml: ['yaml'],
-  xml: ['xml'],
-  dart: ['dart'],
-  lua: ['lua'],
-  r: ['r'],
-  dockerfile: ['dockerfile'],
-};
+import { LANGUAGE_ALIASES } from './languages';
 
 export class SnippetCompletionProvider implements vscode.CompletionItemProvider {
   /** 片段数据服务，用于获取片段列表 */
