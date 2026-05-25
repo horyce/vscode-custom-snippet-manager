@@ -67,7 +67,7 @@ const localeOptions = computed(() =>
 // 当前选中语言的国旗图标名，用于触发器显示
 const currentLocaleFlag = computed(() => {
   const found = SUPPORTED_LOCALES.find((l) => l.value === locale.value)
-  return found ? `circle-flags:${found.flag}` : 'circle-flags:cn'
+  return found ? `circle-flags:${found.flag}` : 'circle-flags:us'
 })
 
 // 当前选中的语言名称，用于触发器显示
@@ -850,7 +850,7 @@ function handleDuplicateCancel() {
   top: calc(100% + 4px);
   right: 0;
   z-index: 1000;
-  min-width: 120px;
+  min-width: 160px;
   border: 1px solid var(--vscode-dropdown-border, rgba(255,255,255,0.12));
   border-radius: 6px;
   background: var(--vscode-editorWidget-background, #252526);
