@@ -55,13 +55,20 @@ const localeMenuOpen = ref(false)
 // 语言切换下拉菜单容器引用
 const localeMenuRef = ref<HTMLElement | null>(null)
 
-// 语言切换下拉选项，每种语言用其自身名称显示
+// 语言切换下拉选项，每种语言用其自身名称和国旗显示
 const localeOptions = computed(() =>
   SUPPORTED_LOCALES.map((l) => ({
     label: l.label,
     value: l.value,
+    flag: l.flag,
   }))
 )
+
+// 当前选中语言的国旗图标名，用于触发器显示
+const currentLocaleFlag = computed(() => {
+  const found = SUPPORTED_LOCALES.find((l) => l.value === locale.value)
+  return found ? `circle-flags:${found.flag}` : 'circle-flags:cn'
+})
 
 // 当前选中的语言名称，用于触发器显示
 const currentLocaleLabel = computed(() => {
@@ -409,7 +416,7 @@ function handleDuplicateCancel() {
         <!-- 语言切换下拉菜单 -->
         <div ref="localeMenuRef" class="locale-select">
           <button class="locale-btn" @click="toggleLocaleMenu">
-            <Icon icon="mdi:translate" class="locale-icon" />
+            <Icon :icon="currentLocaleFlag" class="locale-flag" />
             {{ currentLocaleLabel }}
             <svg class="locale-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
@@ -422,6 +429,7 @@ function handleDuplicateCancel() {
                 :class="{ 'is-selected': opt.value === locale }"
                 @click="changeLocale(opt.value)"
               >
+                <Icon :icon="`circle-flags:${opt.flag}`" class="locale-option-flag" />
                 <span class="locale-option-label">{{ opt.label }}</span>
                 <svg v-if="opt.value === locale" class="locale-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
@@ -812,9 +820,10 @@ function handleDuplicateCancel() {
   letter-spacing: 0.3px;
 }
 
-/* 语言切换按钮中的翻译图标 */
-.locale-icon {
-  font-size: 13px;
+/* 语言切换按钮中的国旗图标 */
+.locale-flag {
+  font-size: 14px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
@@ -871,6 +880,12 @@ function handleDuplicateCancel() {
 .locale-option.is-selected {
   color: var(--vscode-list-activeSelectionForeground, #fff);
   font-weight: 600;
+}
+
+.locale-option-flag {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .locale-option-label {
