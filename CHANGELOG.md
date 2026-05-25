@@ -20,6 +20,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Performance**: Reduced unnecessary file writes when using snippet completions, improving responsiveness during frequent use
 - **Multi-language filter**: Sidebar language filter now supports selecting multiple languages at once, consistent with the editor's language scope selector
 - **Architecture**: Unified language configuration into a single data source
+- **Language Switch Button**: Replaced the translate icon with the current language's flag, and each language option in the dropdown now shows its corresponding flag
 
 ## [1.1.3] - 2026-05-25
 

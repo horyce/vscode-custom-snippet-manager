@@ -1,17 +1,17 @@
 {
   "locales": [
-    { "value": "zh", "label": "简体中文" },
-    { "value": "zh-TW", "label": "繁體中文" },
-    { "value": "en", "label": "English" },
-    { "value": "ja", "label": "日本語" },
-    { "value": "ko", "label": "한국어" },
-    { "value": "ru", "label": "Русский" },
-    { "value": "de", "label": "Deutsch" },
-    { "value": "fr", "label": "Français" },
-    { "value": "es", "label": "Español" },
-    { "value": "pt", "label": "Português" },
-    { "value": "it", "label": "Italiano" },
-    { "value": "pl", "label": "Polski" },
-    { "value": "tr", "label": "Türkçe" }
+    { "value": "zh", "label": "简体中文", "flag": "cn" },
+    { "value": "zh-TW", "label": "繁體中文", "flag": "tw" },
+    { "value": "en", "label": "English", "flag": "gb" },
+    { "value": "ja", "label": "日本語", "flag": "jp" },
+    { "value": "ko", "label": "한국어", "flag": "kr" },
+    { "value": "ru", "label": "Русский", "flag": "ru" },
+    { "value": "de", "label": "Deutsch", "flag": "de" },
+    { "value": "fr", "label": "Français", "flag": "fr" },
+    { "value": "es", "label": "Español", "flag": "es" },
+    { "value": "pt", "label": "Português", "flag": "br" },
+    { "value": "it", "label": "Italiano", "flag": "it" },
+    { "value": "pl", "label": "Polski", "flag": "pl" },
+    { "value": "tr", "label": "Türkçe", "flag": "tr" }
   ]
 }
