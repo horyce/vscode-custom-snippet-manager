@@ -103,5 +103,13 @@ export default {
     description: 'Verimliliği artırmak için özel kod snippetlerini yönetin ve kullanın',
     openDirectory: 'Snippet klasörünü aç',
     storagePath: 'Depolama yolu',
+    clearAllData: 'Tüm verileri temizle',
+  },
+  clearAll: {
+    title: 'Veri temizleme onayı',
+    content: 'Tüm snippet\'leri temizlemek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm snippet\'ler kalıcı olarak silinecektir.',
+    confirm: 'Temizle',
+    cancel: 'İptal',
+    success: '{count} snippet temizlendi',
   },
 }

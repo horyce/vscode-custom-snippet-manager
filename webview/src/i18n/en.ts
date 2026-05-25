@@ -103,5 +103,13 @@ export default {
     description: 'Manage and use custom code snippets to boost productivity',
     openDirectory: 'Open Snippets Directory',
     storagePath: 'Storage Path',
+    clearAllData: 'Clear All Data',
+  },
+  clearAll: {
+    title: 'Clear Data Confirmation',
+    content: 'Are you sure you want to clear all snippets? This action cannot be undone and all snippets will be permanently deleted.',
+    confirm: 'Clear',
+    cancel: 'Cancel',
+    success: '{count} snippet(s) cleared',
   },
 }

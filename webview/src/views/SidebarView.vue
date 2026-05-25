@@ -15,6 +15,7 @@ import { SUPPORTED_LANGUAGES, getLanguageColor, getLanguageIcon } from '../utils
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import { highlightCodeString } from '../utils/codemirror-langs'
 import LanguageSelect from '../components/LanguageSelect.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 import SettingsView from './SettingsView.vue'
 import { SUPPORTED_LOCALES } from '../i18n'
 
@@ -45,8 +46,56 @@ const sortOrder = ref<SortOrder>('desc')
 const currentSortLabel = computed(() => {
   return sortOrder.value === 'desc' ? t('sort.newestFirst') : t('sort.oldestFirst')
 })
-// 当前待删除的片段，用于弹窗确认
-const deletingSnippet = ref<Snippet | null>(null)
+
+// 通用确认弹窗状态（删除、导入、导出等操作共用）
+const confirmState = ref<{
+  visible: boolean
+  title: string
+  content: string
+  confirmLabel: string
+  cancelLabel: string
+  danger: boolean
+  onConfirm: () => void
+}>({
+  visible: false,
+  title: '',
+  content: '',
+  confirmLabel: '',
+  cancelLabel: '',
+  danger: false,
+  onConfirm: () => {},
+})
+
+/** 显示确认弹窗 */
+function showConfirm(options: {
+  title: string
+  content: string
+  confirmLabel: string
+  cancelLabel?: string
+  danger?: boolean
+  onConfirm: () => void
+}) {
+  confirmState.value = {
+    visible: true,
+    title: options.title,
+    content: options.content,
+    confirmLabel: options.confirmLabel,
+    cancelLabel: options.cancelLabel || t('form.cancel'),
+    danger: options.danger ?? false,
+    onConfirm: options.onConfirm,
+  }
+}
+
+/** 确认弹窗 - 确认 */
+function handleConfirmOk() {
+  confirmState.value.onConfirm()
+  confirmState.value.visible = false
+}
+
+/** 确认弹窗 - 取消 */
+function handleConfirmCancel() {
+  confirmState.value.visible = false
+}
 // 通用通知状态
 const notification = ref<{
   visible: boolean
@@ -183,20 +232,16 @@ function handleEdit(snippet: Snippet) {
 
 /** 点击删除按钮，弹出确认弹窗 */
 function handleDelete(snippet: Snippet) {
-  deletingSnippet.value = snippet
-}
-
-/** 确认删除，发送删除消息并关闭弹窗（成功通知由后端确认后发送） */
-function handleDeleteConfirm() {
-  if (deletingSnippet.value) {
-    postToExt('deleteSnippet', { id: deletingSnippet.value.id })
-  }
-  deletingSnippet.value = null
-}
-
-/** 取消删除，关闭弹窗 */
-function handleDeleteCancel() {
-  deletingSnippet.value = null
+  showConfirm({
+    title: t('delete.title'),
+    content: t('delete.content', { name: snippet.name }),
+    confirmLabel: t('delete.confirm'),
+    cancelLabel: t('delete.cancel'),
+    danger: true,
+    onConfirm: () => {
+      postToExt('deleteSnippet', { id: snippet.id })
+    },
+  })
 }
 
 /** 显示通知提示，成功/警告3秒后自动隐藏，错误类型需手动关闭 */
@@ -249,52 +294,6 @@ onExtMessage('error', (payload) => {
   const data = payload as { errorKey: string; errorParams?: Record<string, string> }
   showError(t(data.errorKey, data.errorParams ?? {}))
 })
-
-// 导入导出确认弹窗状态
-const confirmDialog = ref<{
-  visible: boolean
-  title: string
-  content: string
-  confirmLabel: string
-  danger: boolean
-  onConfirm: () => void
-}>({
-  visible: false,
-  title: '',
-  content: '',
-  confirmLabel: '',
-  danger: false,
-  onConfirm: () => {},
-})
-
-/** 显示确认对话框 */
-function showConfirm(options: {
-  title: string
-  content: string
-  confirmLabel: string
-  danger?: boolean
-  onConfirm: () => void
-}) {
-  confirmDialog.value = {
-    visible: true,
-    title: options.title,
-    content: options.content,
-    confirmLabel: options.confirmLabel,
-    danger: options.danger ?? false,
-    onConfirm: options.onConfirm,
-  }
-}
-
-/** 确认对话框 - 确认 */
-function handleConfirmOk() {
-  confirmDialog.value.onConfirm()
-  confirmDialog.value.visible = false
-}
-
-/** 确认对话框 - 取消 */
-function handleConfirmCancel() {
-  confirmDialog.value.visible = false
-}
 
 /** 点击导出配置按钮 */
 function handleExport() {
@@ -660,37 +659,17 @@ function handleListScroll() {
       </div>
     </transition>
 
-    <!-- 删除确认弹窗：自定义浮层，按钮与编辑页 btn 风格统一 -->
-    <div v-if="deletingSnippet" class="modal-overlay" @click.self="handleDeleteCancel">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <span class="modal-title">{{ t('delete.title') }}</span>
-        </div>
-        <div class="modal-body">
-          <p>{{ t('delete.content', { name: deletingSnippet?.name }) }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="handleDeleteCancel">{{ t('delete.cancel') }}</button>
-          <button class="btn btn-danger btn-sm" @click="handleDeleteConfirm">{{ t('delete.confirm') }}</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 通用确认对话框（导入/导出等操作） -->
-    <div v-if="confirmDialog.visible" class="modal-overlay" @click.self="handleConfirmCancel">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <span class="modal-title">{{ confirmDialog.title }}</span>
-        </div>
-        <div class="modal-body">
-          <p>{{ confirmDialog.content }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="handleConfirmCancel">{{ t('form.cancel') }}</button>
-          <button class="btn btn-sm" :class="confirmDialog.danger ? 'btn-danger' : 'btn-primary'" @click="handleConfirmOk">{{ confirmDialog.confirmLabel }}</button>
-        </div>
-      </div>
-    </div>
+    <!-- 通用确认弹窗（删除/导入/导出等操作） -->
+    <ConfirmDialog
+      :visible="confirmState.visible"
+      :title="confirmState.title"
+      :content="confirmState.content"
+      :confirm-label="confirmState.confirmLabel"
+      :cancel-label="confirmState.cancelLabel"
+      :danger="confirmState.danger"
+      @confirm="handleConfirmOk"
+      @cancel="handleConfirmCancel"
+    />
 
     <!-- 重复片段策略选择对话框 -->
     <div v-if="duplicateDialog.visible" class="modal-overlay" @click.self="handleDuplicateCancel">

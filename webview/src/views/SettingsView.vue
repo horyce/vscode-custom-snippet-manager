@@ -5,8 +5,11 @@
  * 包含关于页面，展示插件名称、版本号、GitHub 地址等基础信息
  * 后续可扩展实际设置功能
  */
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
+import { postToExt } from '../composables/useMessage'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const { t } = useI18n()
 
@@ -19,9 +22,11 @@ const APP_NAME = 'Custom Snippet Manager'
 const GITHUB_URL = 'https://github.com/horyce/vscode-custom-snippet-manager'
 const LICENSE = 'MIT'
 
+// 清空数据确认弹窗状态
+const clearConfirmVisible = ref(false)
+
 /** 在外部浏览器中打开链接 */
 function openExternal(url: string) {
-  // Webview 中无法直接使用 window.open，需要通过 VS Code 命令打开
   if (window.vscode) {
     window.vscode.postMessage({ type: 'openExternal', payload: url })
   }
@@ -32,6 +37,22 @@ function openSnippetsDirectory() {
   if (window.vscode) {
     window.vscode.postMessage({ type: 'openSnippetsDirectory' })
   }
+}
+
+/** 点击清空数据按钮，弹出二次确认 */
+function handleClearAll() {
+  clearConfirmVisible.value = true
+}
+
+/** 确认清空所有数据 */
+function handleClearConfirm() {
+  postToExt('clearAllSnippets')
+  clearConfirmVisible.value = false
+}
+
+/** 取消清空操作 */
+function handleClearCancel() {
+  clearConfirmVisible.value = false
 }
 
 // 定义 emit，用于返回上一页
@@ -102,11 +123,29 @@ const emit = defineEmits<{
         {{ t('settings.openDirectory') }}
       </button>
 
+      <!-- 清空所有数据按钮 -->
+      <button class="clear-all-btn" @click="handleClearAll">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        {{ t('settings.clearAllData') }}
+      </button>
+
       <!-- 底部说明 -->
       <div class="about-footer">
         <p class="about-desc">{{ t('settings.description') }}</p>
       </div>
     </div>
+
+    <!-- 清空数据二次确认弹窗 -->
+    <ConfirmDialog
+      :visible="clearConfirmVisible"
+      :title="t('clearAll.title')"
+      :content="t('clearAll.content')"
+      :confirm-label="t('clearAll.confirm')"
+      :cancel-label="t('clearAll.cancel')"
+      danger
+      @confirm="handleClearConfirm"
+      @cancel="handleClearCancel"
+    />
   </div>
 </template>
 
@@ -268,7 +307,7 @@ const emit = defineEmits<{
   gap: 6px;
   width: 100%;
   padding: $spacing-sm $spacing-lg;
-  margin-bottom: $spacing-xl;
+  margin-bottom: $spacing-md;
   border: 1px solid $border-button;
   border-radius: $radius-md;
   background: $btn-secondary-bg;
@@ -281,6 +320,30 @@ const emit = defineEmits<{
 
   &:hover {
     background: $btn-secondary-hover;
+  }
+}
+
+.clear-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: $spacing-sm $spacing-lg;
+  margin-bottom: $spacing-xl;
+  border: 1px solid rgba(244, 135, 113, 0.3);
+  border-radius: $radius-md;
+  background: rgba(244, 135, 113, 0.1);
+  color: $color-error;
+  font-size: $font-size-base;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: rgba(244, 135, 113, 0.2);
+    border-color: rgba(244, 135, 113, 0.5);
   }
 }
 

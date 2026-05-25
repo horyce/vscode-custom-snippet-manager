@@ -103,5 +103,13 @@ export default {
     description: 'Zarządzaj i używaj niestandardowych snippetów kodu, aby zwiększyć produktywność',
     openDirectory: 'Otwórz folder snippetów',
     storagePath: 'Ścieżka zapisu',
+    clearAllData: 'Wyczyść wszystkie dane',
+  },
+  clearAll: {
+    title: 'Potwierdź czyszczenie',
+    content: 'Czy na pewno chcesz wyczyścić wszystkie snippety? Tej operacji nie można cofnąć i wszystkie snippety zostaną trwale usunięte.',
+    confirm: 'Wyczyść',
+    cancel: 'Anuluj',
+    success: 'Wyczyszczono {count} snippetów',
   },
 }

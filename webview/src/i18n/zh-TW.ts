@@ -103,5 +103,13 @@ export default {
     description: '管理和使用自訂程式碼片段，提升開發效率',
     openDirectory: '打開程式碼片段目錄',
     storagePath: '儲存路徑',
+    clearAllData: '清空所有資料',
+  },
+  clearAll: {
+    title: '清空資料確認',
+    content: '確定要清空所有程式碼片段嗎？此操作無法撤銷，所有片段將被永久刪除。',
+    confirm: '清空',
+    cancel: '取消',
+    success: '已清空 {count} 個程式碼片段',
   },
 }

@@ -103,5 +103,13 @@ export default {
     description: '管理和使用自定义代码片段，提升开发效率',
     openDirectory: '打开代码片段目录',
     storagePath: '存储路径',
+    clearAllData: '清空所有数据',
+  },
+  clearAll: {
+    title: '清空数据确认',
+    content: '确定要清空所有代码片段吗？此操作不可撤销，所有片段将被永久删除。',
+    confirm: '清空',
+    cancel: '取消',
+    success: '已清空 {count} 个代码片段',
   },
 }

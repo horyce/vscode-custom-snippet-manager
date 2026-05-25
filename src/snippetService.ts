@@ -295,6 +295,15 @@ export class SnippetService {
     await this.save();
   }
 
+  /** 清空所有片段数据，返回被清除的片段数量 */
+  async clearAll(): Promise<number> {
+    await this.flush();
+    const count = this.snippets.length;
+    this.snippets = [];
+    await this.save();
+    return count;
+  }
+
   /** 基于时间戳和随机数生成唯一 ID */
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
