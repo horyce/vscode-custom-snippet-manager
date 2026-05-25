@@ -9,9 +9,12 @@ import { SidebarWebviewProvider } from './sidebarWebviewProvider';
 import { SnippetService } from './snippetService';
 import { SnippetCompletionProvider } from './snippetProvider';
 
+/** 模块级引用，供 deactivate 时刷盘使用 */
+let snippetService: SnippetService;
+
 export function activate(context: vscode.ExtensionContext): void {
   // 初始化片段数据服务，使用全局存储路径持久化数据
-  const snippetService = new SnippetService(context);
+  snippetService = new SnippetService(context);
 
   // 创建侧边栏 Webview 视图提供者，负责渲染片段列表
   const sidebarProvider = new SidebarWebviewProvider(context.extensionUri, snippetService, context);
@@ -44,9 +47,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // 增加片段使用计数：补全项被接受时自动调用
   context.subscriptions.push(
-    vscode.commands.registerCommand('custom-snippet-manager.incrementUsage', async (snippetId: string) => {
+    vscode.commands.registerCommand('custom-snippet-manager.incrementUsage', (snippetId: string) => {
       if (snippetId) {
-        await snippetService.incrementUsage(snippetId);
+        snippetService.incrementUsage(snippetId);
       }
     })
   );
@@ -139,7 +142,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const snippetString = new vscode.SnippetString(selected.snippet.body);
       editor.insertSnippet(snippetString);
       // 插入成功后增加使用计数
-      await snippetService.incrementUsage(selected.snippet.id);
+      snippetService.incrementUsage(selected.snippet.id);
     })
   );
 
@@ -233,4 +236,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 }
 
-export function deactivate(): void {}
+export function deactivate(): void {
+  // 扩展停用时立即刷盘，确保防抖中的 usageCount 变更不丢失
+  snippetService.flush();
+}
