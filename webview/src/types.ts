@@ -56,6 +56,7 @@ export type MessageType =
   | 'duplicateStrategyChoice'
   | 'showNotification'
   | 'localeChanged'
+  | 'clearAllSnippets'
   | 'error'
 
 /** Webview 发送给扩展的消息格式 */

@@ -103,5 +103,13 @@ export default {
     description: 'Verwalten und verwenden Sie benutzerdefinierte Code-Snippets für mehr Produktivität',
     openDirectory: 'Snippet-Verzeichnis öffnen',
     storagePath: 'Speicherpfad',
+    clearAllData: 'Alle Daten löschen',
+  },
+  clearAll: {
+    title: 'Datenlöschung bestätigen',
+    content: 'Möchten Sie wirklich alle Snippets löschen? Diese Aktion kann nicht rückgängig gemacht werden und alle Snippets werden dauerhaft gelöscht.',
+    confirm: 'Löschen',
+    cancel: 'Abbrechen',
+    success: '{count} Snippet(s) gelöscht',
   },
 }
