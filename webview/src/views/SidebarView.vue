@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Fuse from 'fuse.js'
 import type { Snippet, SortOrder } from '../types'
-import { SUPPORTED_LANGUAGES } from '../types'
+import { SUPPORTED_LANGUAGES, getLanguageColor, getLanguageIcon } from '../utils/languages'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import { SUPPORTED_LOCALES } from '../i18n'
@@ -142,28 +142,6 @@ const filteredSnippets = computed(() => {
 
   return sorted
 })
-
-/** 根据 language value 获取对应的 Iconify 图标名，用于列表项的语言标签 */
-function getLanguageIconify(lang: string): string {
-  const found = SUPPORTED_LANGUAGES.find((l) => l.value === lang)
-  return found ? found.icon : 'carbon:code'
-}
-
-/** 获取语言对应的品牌色，用于语言标签的背景和边框 */
-function getLanguageColor(lang: string): string {
-  const colorMap: Record<string, string> = {
-    javascript: '#f7df1e', typescript: '#3178c6', python: '#3776ab',
-    html: '#e34f26', css: '#1572b6', json: '#292929', java: '#ed8b00',
-    csharp: '#239120', cpp: '#00599c', c: '#a8b9cc', go: '#00add8',
-    rust: '#dea584', php: '#777bb4', ruby: '#cc342d', swift: '#fa7343',
-    kotlin: '#7f52ff', vue: '#4fc08d', javascriptreact: '#61dafb',
-    typescriptreact: '#61dafb', scss: '#cc6699', less: '#1d365d',
-    shellscript: '#89e051', sql: '#e38c00', yaml: '#cb171e',
-    xml: '#e37933', dart: '#0175c2', lua: '#000080', r: '#276dc3',
-    dockerfile: '#2496ed', markdown: '#083fa1',
-  }
-  return colorMap[lang] || 'var(--vscode-textPreformat-foreground)'
-}
 
 /** 点击新建按钮，通知后端打开空白编辑器 */
 function handleCreate() {
@@ -529,7 +507,7 @@ function handleDuplicateCancel() {
                 class="lang-badge"
                 :style="{ backgroundColor: getLanguageColor(lang) + '22', color: getLanguageColor(lang), borderColor: getLanguageColor(lang) + '44' }"
               >
-                <Icon v-if="lang !== '*'" :icon="getLanguageIconify(lang)" class="lang-badge-icon" />
+                <Icon v-if="lang !== '*'" :icon="getLanguageIcon(lang)" class="lang-badge-icon" />
                 <span class="lang-badge-text">{{ lang === '*' ? t('form.allLanguages') : lang }}</span>
               </span>
             </div>

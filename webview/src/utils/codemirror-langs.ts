@@ -1,7 +1,7 @@
 /**
  * CodeMirror 语言扩展映射
  * 将 VS Code languageId 映射到对应的 CodeMirror 语言扩展
- * 对于 CodeMirror 不支持的语言，返回空数组（无高亮）
+ * 语言列表从统一配置 languages.ts 获取，此处仅负责 CodeMirror 扩展的工厂函数映射
  */
 import { type LanguageSupport } from '@codemirror/language'
 import { javascript } from '@codemirror/lang-javascript'

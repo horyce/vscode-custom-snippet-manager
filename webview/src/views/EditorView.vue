@@ -8,7 +8,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Snippet } from '../types'
-import { SUPPORTED_LANGUAGES } from '../types'
+import { SUPPORTED_LANGUAGES } from '../utils/languages'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import CodeEditor from '../components/CodeEditor.vue'
