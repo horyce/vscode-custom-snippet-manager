@@ -16,6 +16,7 @@ const PACKAGE_MAP = {
   'simple-icons': '@iconify-json/simple-icons/icons.json',
   'mdi': '@iconify-json/mdi/icons.json',
   'carbon': '@iconify-json/carbon/icons.json',
+  'circle-flags': '@iconify-json/circle-flags/icons.json',
 }
 
 /**
@@ -48,9 +49,18 @@ function parseIconsFromLanguages() {
 
   // 补充非语言图标
   if (!icons['mdi']) icons['mdi'] = []
-  if (!icons['mdi'].includes('translate')) icons['mdi'].push('translate')
   if (!icons['carbon']) icons['carbon'] = []
   if (!icons['carbon'].includes('code')) icons['carbon'].push('code')
+
+  // 从 locales.json 解析国旗图标
+  const localesPath = resolve(__dirname, '..', '..', 'locales.json')
+  const localesData = JSON.parse(readFileSync(localesPath, 'utf-8'))
+  if (!icons['circle-flags']) icons['circle-flags'] = []
+  for (const locale of localesData.locales) {
+    if (locale.flag && !icons['circle-flags'].includes(locale.flag)) {
+      icons['circle-flags'].push(locale.flag)
+    }
+  }
 
   return icons
 }
