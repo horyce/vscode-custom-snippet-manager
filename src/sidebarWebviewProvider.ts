@@ -216,6 +216,22 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         }
         break;
       }
+
+      // 前端请求打开代码片段存储目录
+      case 'openSnippetsDirectory': {
+        const storagePath = this.snippetService.getStoragePath();
+        try {
+          // 确保目录存在
+          await fs.promises.access(storagePath);
+          // 使用系统文件管理器打开目录
+          const uri = vscode.Uri.file(storagePath);
+          await vscode.env.openExternal(uri);
+        } catch {
+          // 目录不存在时显示错误提示
+          vscode.window.showErrorMessage(vscode.l10n.t('Snippets directory does not exist. Please restart the extension.'));
+        }
+        break;
+      }
     }
   }
 

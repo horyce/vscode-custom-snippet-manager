@@ -101,5 +101,6 @@ export default {
     repository: '저장소',
     feedback: '피드백',
     description: '커스텀 코드 스니펫을 관리하고 사용하여 생산성 향상',
+    openDirectory: '스니펫 저장 폴더 열기',
   },
 }

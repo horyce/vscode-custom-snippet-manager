@@ -78,6 +78,11 @@ export class SnippetService {
     await this.initPromise;
   }
 
+  /** 获取片段数据存储目录路径，供前端"打开目录"功能使用 */
+  getStoragePath(): string {
+    return this.storageUri.fsPath;
+  }
+
   /** 异步初始化：确保目录存在并加载数据 */
   private async init(): Promise<void> {
     await this.ensureStorageDir();
