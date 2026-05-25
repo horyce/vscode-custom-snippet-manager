@@ -404,10 +404,6 @@ function handleDuplicateCancel() {
     <!-- 顶部标题栏：图标 + 标题 + 语言切换 -->
     <div class="sidebar-header">
       <div class="header-content">
-        <!-- 标题图标，使用项目 logo -->
-        <div class="header-icon">
-          <img src="../assets/logo.png" alt="logo" class="header-logo" />
-        </div>
         <h2 class="header-title">{{ t('app.title') }}</h2>
         <!-- 设置按钮 -->
         <button class="settings-btn" :title="t('settings.title')" @click="currentView = 'settings'">
@@ -726,23 +722,6 @@ function handleDuplicateCancel() {
   align-items: center;
   gap: $spacing-sm;
   margin-bottom: 10px;
-}
-
-.header-icon {
-  @include flex-center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: $gradient-primary;
-  color: #fff;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.header-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .header-title {
