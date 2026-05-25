@@ -59,6 +59,12 @@ export class SnippetService {
   private initialized = false;
   /** 初始化 Promise，供外部等待数据加载完成 */
   private initPromise: Promise<void>;
+  /** 是否有未持久化的 usageCount 变更 */
+  private dirty = false;
+  /** 防抖写入定时器 */
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+  /** 防抖延迟（毫秒），高频更新时合并写入 */
+  private static readonly DEBOUNCE_MS = 2000;
 
   constructor(context: vscode.ExtensionContext) {
     this.storageUri = context.globalStorageUri;
@@ -174,6 +180,8 @@ export class SnippetService {
 
   /** 创建新片段，自动生成唯一 ID 并持久化 */
   async create(data: Omit<SnippetData, 'id' | 'usageCount' | 'createdAt'>): Promise<SnippetData> {
+    // 先刷盘脏数据，避免防抖中的 usageCount 变更丢失
+    await this.flush();
     const snippet: SnippetData = {
       id: this.generateId(),
       usageCount: 0,
@@ -188,6 +196,8 @@ export class SnippetService {
 
   /** 根据 ID 更新片段，返回更新后的数据，未找到时返回 null */
   async update(id: string, data: Omit<SnippetData, 'id' | 'usageCount' | 'createdAt'>): Promise<SnippetData | null> {
+    // 先刷盘脏数据，避免防抖中的 usageCount 变更丢失
+    await this.flush();
     const idx = this.snippets.findIndex((s) => s.id === id);
     if (idx === -1) {
       return null;
@@ -200,6 +210,8 @@ export class SnippetService {
 
   /** 根据 ID 删除片段，返回是否删除成功 */
   async delete(id: string): Promise<boolean> {
+    // 先刷盘脏数据，避免防抖中的 usageCount 变更丢失
+    await this.flush();
     const idx = this.snippets.findIndex((s) => s.id === id);
     if (idx === -1) {
       return false;
@@ -209,15 +221,45 @@ export class SnippetService {
     return true;
   }
 
-  /** 基于 ID 增加片段的使用计数，用于排序和统计 */
-  async incrementUsage(id: string): Promise<boolean> {
+  /**
+   * 基于ID增加片段的使用计数
+   * 内存即时更新，防抖延迟写入文件，避免高频补全时频繁 I/O
+   */
+  incrementUsage(id: string): boolean {
     const idx = this.snippets.findIndex((s) => s.id === id);
     if (idx === -1) {
       return false;
     }
     this.snippets[idx].usageCount = (this.snippets[idx].usageCount ?? 0) + 1;
-    await this.save();
+    this.dirty = true;
+    this.scheduleSave();
     return true;
+  }
+
+  /** 安排防抖写入：延迟 DEBOUNCE_MS 后执行，重复调用只保留最后一次 */
+  private scheduleSave(): void {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      if (this.dirty) {
+        this.dirty = false;
+        this.save();
+      }
+    }, SnippetService.DEBOUNCE_MS);
+  }
+
+  /** 立即将脏数据写入文件，用于扩展停用或需要数据一致性的场景 */
+  async flush(): Promise<void> {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+    if (this.dirty) {
+      this.dirty = false;
+      await this.save();
+    }
   }
 
   /**
@@ -225,6 +267,8 @@ export class SnippetService {
    * 用于导入大量片段时避免逐条写文件导致的性能问题
    */
   async batchImport(operations: ImportOperation[]): Promise<void> {
+    // 先刷盘脏数据，避免防抖中的 usageCount 变更丢失
+    await this.flush();
     for (const op of operations) {
       if (op.type === 'create') {
         const snippet: SnippetData = {
