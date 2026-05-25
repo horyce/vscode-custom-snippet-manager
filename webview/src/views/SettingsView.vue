@@ -26,6 +26,13 @@ function openExternal(url: string) {
   }
 }
 
+/** 打开代码片段存储目录 */
+function openSnippetsDirectory() {
+  if (window.vscode) {
+    window.vscode.postMessage({ type: 'openSnippetsDirectory' })
+  }
+}
+
 // 定义 emit，用于返回上一页
 const emit = defineEmits<{
   back: []
@@ -81,6 +88,12 @@ const emit = defineEmits<{
           </span>
         </div>
       </div>
+
+      <!-- 打开代码片段目录按钮 -->
+      <button class="open-dir-btn" @click="openSnippetsDirectory">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        {{ t('settings.openDirectory') }}
+      </button>
 
       <!-- 底部说明 -->
       <div class="about-footer">
@@ -249,6 +262,30 @@ const emit = defineEmits<{
 .about-footer {
   width: 100%;
   text-align: center;
+}
+
+/* 打开目录按钮 */
+.open-dir-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 16px;
+  margin-bottom: 24px;
+  border: 1px solid var(--vscode-button-border, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  color: var(--vscode-button-secondaryForeground, #fff);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.open-dir-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
 }
 
 .about-desc {

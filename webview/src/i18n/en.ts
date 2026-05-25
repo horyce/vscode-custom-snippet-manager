@@ -101,5 +101,6 @@ export default {
     repository: 'Repository',
     feedback: 'Feedback',
     description: 'Manage and use custom code snippets to boost productivity',
+    openDirectory: 'Open Snippets Directory',
   },
 }

@@ -101,5 +101,6 @@ export default {
     repository: 'Repository',
     feedback: 'Feedback',
     description: 'Gestisci e usa snippet di codice personalizzati per aumentare la produttività',
+    openDirectory: 'Apri cartella snippet',
   },
 }
