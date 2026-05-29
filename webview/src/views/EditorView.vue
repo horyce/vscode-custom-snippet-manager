@@ -47,11 +47,12 @@ const languageOptions = computed(() =>
   }))
 )
 
-/** 文件夹下拉选项，默认文件夹用 i18n 名称 */
+/** 文件夹下拉选项，默认文件夹用 i18n 名称，统一加文件夹图标以复用 LanguageSelect */
 const folderOptions = computed(() =>
   folders.value.map((f) => ({
     value: f.id,
     label: f.id === DEFAULT_FOLDER_ID ? t('folder.defaultName') : f.name,
+    icon: 'carbon:folder',
   }))
 )
 
@@ -276,14 +277,11 @@ onMounted(() => {
       <div class="form-section">
         <div class="form-group">
           <label class="form-label">{{ t('folder.belongTo') }}</label>
-          <div class="select-wrapper">
-            <select v-model="form.folderId" class="form-input folder-select">
-              <option v-for="opt in folderOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
+          <LanguageSelect
+            v-model="form.folderId"
+            :options="folderOptions"
+            placement="top"
+          />
         </div>
       </div>
     </div>
@@ -445,28 +443,6 @@ onMounted(() => {
 .form-input {
   @include input-base;
   padding: 9px $spacing-md;
-}
-
-// ===== 所属文件夹下拉 =====
-.select-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.folder-select {
-  width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 32px;
-  cursor: pointer;
-}
-
-.select-arrow {
-  position: absolute;
-  right: 10px;
-  opacity: 0.6;
-  pointer-events: none;
 }
 
 .has-error .form-input,

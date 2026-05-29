@@ -733,8 +733,8 @@ function handleListScroll() {
       </button>
     </div>
 
-    <!-- 搜索框：列表为空时隐藏，与编辑页 form-input 风格统一 -->
-    <div v-if="snippets.length > 0" class="sidebar-search">
+    <!-- 搜索框：与编辑页 form-input 风格统一 -->
+    <div class="sidebar-search">
       <div class="search-wrapper">
         <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input
@@ -749,8 +749,8 @@ function handleListScroll() {
       </div>
     </div>
 
-    <!-- 语言筛选下拉：列表为空时隐藏，使用自定义组件显示图标 -->
-    <div v-if="snippets.length > 0" class="sidebar-filter">
+    <!-- 语言筛选下拉：使用自定义组件显示图标 -->
+    <div class="sidebar-filter">
       <LanguageSelect
         v-model="languageFilter"
         :options="languageOptions"
@@ -759,8 +759,8 @@ function handleListScroll() {
       />
     </div>
 
-    <!-- 排序切换按钮：列表为空时隐藏 -->
-    <div v-if="snippets.length > 0" class="sidebar-sort">
+    <!-- 排序切换按钮 -->
+    <div class="sidebar-sort">
       <button class="sort-toggle-btn" @click="toggleSortOrder" :title="currentSortLabel">
         <svg v-if="sortOrder === 'desc'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>
         <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12l7-7 7 7"/></svg>
