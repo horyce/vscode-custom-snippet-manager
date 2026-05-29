@@ -8,7 +8,7 @@
  */
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { SnippetService, SnippetData, ImportOperation } from './snippetService';
+import { SnippetService, SnippetData, ImportOperation, DEFAULT_FOLDER_ID } from './snippetService';
 
 /** 导出文件的顶层结构 */
 interface ExportData {
@@ -77,16 +77,20 @@ export class ImportExportService {
   }
 
   /**
-   * 导出所有代码片段到 JSON 文件
+   * 导出代码片段到 JSON 文件
    * 使用 VS Code 原生文件保存对话框选择保存位置
    * 文件命名格式：code_snippet_config_YYYYMMDD_HHMMSS.json
+   * @param folderId 指定时仅导出该文件夹的片段，缺省导出全部
    * @returns 导出结果，Webview 端根据 success 和 count 用 i18n 显示提示
    */
-  async exportSnippets(): Promise<ExportResult> {
-    const snippets = this.snippetService.getAll();
+  async exportSnippets(folderId?: string): Promise<ExportResult> {
+    // 指定文件夹时仅取该文件夹片段，否则取全部
+    const snippets = folderId
+      ? this.snippetService.getSnippetsByFolder(folderId)
+      : this.snippetService.getAll();
 
-    // 导出时剔除 usageCount 和 createdAt 字段
-    const exportableSnippets = snippets.map(({ usageCount, createdAt, ...rest }) => rest);
+    // 导出时剔除 usageCount、createdAt 和运行时 folderId 字段，保持与旧版扁平格式兼容
+    const exportableSnippets = snippets.map(({ usageCount, createdAt, folderId: _fid, ...rest }) => rest);
 
     // 构造导出数据
     const exportData: ExportData = {
@@ -178,8 +182,10 @@ export class ImportExportService {
     const exportData = parsed as ExportData;
     const incomingSnippets = exportData.snippets;
 
-    // 检查是否有重复片段
-    const existingSnippets = this.snippetService.getAll();
+    // 导入统一进入默认文件夹，重复检测只比对默认文件夹内的现有片段
+    const existingSnippets = this.snippetService
+      .getAll()
+      .filter((s) => (s.folderId ?? DEFAULT_FOLDER_ID) === DEFAULT_FOLDER_ID);
     const duplicates = this.findDuplicates(incomingSnippets, existingSnippets);
 
     // 确定重复处理策略
@@ -395,14 +401,14 @@ export class ImportExportService {
 
             case 'merge':
               // 合并：生成新 ID 保留两者
-              operations.push({ type: 'create', data: snippetData });
+              operations.push({ type: 'create', folderId: DEFAULT_FOLDER_ID, data: snippetData });
               result.merged++;
               result.imported++;
               break;
           }
         } else {
           // 非重复：直接创建
-          operations.push({ type: 'create', data: snippetData });
+          operations.push({ type: 'create', folderId: DEFAULT_FOLDER_ID, data: snippetData });
           result.imported++;
         }
       } catch (err) {

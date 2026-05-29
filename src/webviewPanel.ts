@@ -218,12 +218,14 @@ export class WebviewPanel {
 
     let html = await fs.promises.readFile(htmlPath, 'utf-8');
 
-    // 注入视图模式、语言偏好和 VS Code API
+    // 注入视图模式、语言偏好、文件夹清单和 VS Code API
     // 前端根据 __VIEW_MODE 决定渲染侧边栏还是编辑器
     const locale = this.context.globalState.get<string>('locale', 'zh');
+    // 文件夹清单注入，供编辑器"所属文件夹"下拉框渲染
+    const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
     html = html.replace(
       '<head>',
-      `<head><script>window.__VIEW_MODE = 'editor'; window.__LOCALE = '${locale}'; window.vscode = acquireVsCodeApi()</script>`
+      `<head><script>window.__VIEW_MODE = 'editor'; window.__LOCALE = '${locale}'; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
     );
 
     // 替换 CSS 资源路径为 webview 可访问的 URI

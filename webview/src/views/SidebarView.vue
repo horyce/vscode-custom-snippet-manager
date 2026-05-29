@@ -10,7 +10,8 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Fuse from 'fuse.js'
-import type { Snippet, SortOrder } from '../types'
+import type { Snippet, SortOrder, Folder } from '../types'
+import { DEFAULT_FOLDER_ID } from '../types'
 import { SUPPORTED_LANGUAGES, getLanguageColor, getLanguageIcon } from '../utils/languages'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import { useNotification } from '../composables/useNotification'
@@ -40,6 +41,26 @@ watch(currentView, () => {
 
 // 片段列表数据
 const snippets = ref<Snippet[]>([])
+// 文件夹清单，从后端注入的初始数据初始化
+const folders = ref<Folder[]>(Array.isArray(window.__FOLDERS) ? window.__FOLDERS : [])
+// 已折叠的文件夹 id 集合，默认全部展开
+const collapsedFolders = ref<Set<string>>(new Set())
+
+/** 获取文件夹显示名称，默认文件夹用 i18n，其余用自身名称 */
+function folderDisplayName(folder: Folder): string {
+  return folder.id === DEFAULT_FOLDER_ID ? t('folder.defaultName') : folder.name
+}
+
+/** 切换文件夹折叠/展开状态 */
+function toggleFolder(folderId: string) {
+  const next = new Set(collapsedFolders.value)
+  if (next.has(folderId)) {
+    next.delete(folderId)
+  } else {
+    next.add(folderId)
+  }
+  collapsedFolders.value = next
+}
 // 搜索关键词
 const searchQuery = ref('')
 // 语言筛选值，'*' 表示全部，多选时逗号分隔
@@ -163,6 +184,36 @@ const filteredSnippets = computed(() => {
   return sorted
 })
 
+/**
+ * 将筛选后的片段按文件夹分组，用于折叠树渲染
+ * 顺序遵循文件夹清单顺序；搜索/筛选时仅显示有匹配片段的文件夹
+ * 非搜索筛选状态下，空文件夹也显示（方便用户看到结构并向其添加片段）
+ */
+const groupedFolders = computed(() => {
+  // 建立 folderId -> 片段列表 的映射
+  const map = new Map<string, Snippet[]>()
+  for (const s of filteredSnippets.value) {
+    const fid = s.folderId ?? DEFAULT_FOLDER_ID
+    const list = map.get(fid)
+    if (list) {
+      list.push(s)
+    } else {
+      map.set(fid, [s])
+    }
+  }
+
+  // 是否处于搜索或语言筛选状态
+  const isFiltering = !!searchQuery.value.trim() || (languageFilter.value !== '*' && !!languageFilter.value)
+
+  return folders.value.map((folder) => ({
+    folder,
+    snippets: map.get(folder.id) ?? [],
+  })).filter((group) => {
+    // 筛选状态下隐藏无匹配片段的文件夹，非筛选状态下全部显示
+    return isFiltering ? group.snippets.length > 0 : true
+  })
+})
+
 /** 点击新建按钮，通知后端打开空白编辑器 */
 function handleCreate() {
   postToExt('openEditor', null)
@@ -188,9 +239,102 @@ function handleDelete(snippet: Snippet) {
   })
 }
 
+// ===== 文件夹管理 =====
+
+// 文件夹编辑对话框状态：mode 区分新建和重命名
+const folderDialog = ref<{
+  visible: boolean
+  mode: 'create' | 'rename'
+  id: string
+  name: string
+}>({
+  visible: false,
+  mode: 'create',
+  id: '',
+  name: '',
+})
+
+// 删除文件夹对话框状态，展示该文件夹下的片段数量供用户决策
+const deleteFolderDialog = ref<{
+  visible: boolean
+  id: string
+  name: string
+  count: number
+}>({
+  visible: false,
+  id: '',
+  name: '',
+  count: 0,
+})
+
+/** 打开新建文件夹对话框 */
+function openCreateFolder() {
+  folderDialog.value = { visible: true, mode: 'create', id: '', name: '' }
+}
+
+/** 打开重命名文件夹对话框（默认文件夹不可重命名） */
+function openRenameFolder(folder: Folder) {
+  if (folder.id === DEFAULT_FOLDER_ID) return
+  folderDialog.value = { visible: true, mode: 'rename', id: folder.id, name: folder.name }
+}
+
+/** 提交文件夹对话框：新建或重命名 */
+function submitFolderDialog() {
+  const name = folderDialog.value.name.trim()
+  if (!name) {
+    showWarning(t('folder.nameRequired'))
+    return
+  }
+  if (folderDialog.value.mode === 'create') {
+    postToExt('createFolder', { name })
+  } else {
+    postToExt('renameFolder', { id: folderDialog.value.id, name })
+  }
+  folderDialog.value.visible = false
+}
+
+/** 取消文件夹对话框 */
+function cancelFolderDialog() {
+  folderDialog.value.visible = false
+}
+
+/** 打开删除文件夹对话框（默认文件夹不可删除） */
+function openDeleteFolder(folder: Folder) {
+  if (folder.id === DEFAULT_FOLDER_ID) return
+  // 统计该文件夹下的片段数量
+  const count = snippets.value.filter((s) => (s.folderId ?? DEFAULT_FOLDER_ID) === folder.id).length
+  deleteFolderDialog.value = { visible: true, id: folder.id, name: folder.name, count }
+}
+
+/** 确认删除文件夹，action 决定片段处理方式 */
+function confirmDeleteFolder(action: 'move' | 'delete') {
+  postToExt('deleteFolder', { id: deleteFolderDialog.value.id, action })
+  deleteFolderDialog.value.visible = false
+}
+
+/** 取消删除文件夹 */
+function cancelDeleteFolder() {
+  deleteFolderDialog.value.visible = false
+}
+
 // 监听后端返回的片段列表数据（包括删除后自动刷新）
 onExtMessage('snippetsList', (payload) => {
   snippets.value = payload as Snippet[]
+})
+
+// 监听后端返回的文件夹清单（创建/重命名/删除后自动刷新）
+onExtMessage('foldersList', (payload) => {
+  const list = payload as Folder[]
+  folders.value = list
+  // 清理已不存在文件夹的折叠状态，避免内存残留
+  const validIds = new Set(list.map((f) => f.id))
+  const next = new Set<string>()
+  for (const id of collapsedFolders.value) {
+    if (validIds.has(id)) {
+      next.add(id)
+    }
+  }
+  collapsedFolders.value = next
 })
 
 // 监听后端返回的错误消息（使用 i18n 渲染）
@@ -199,20 +343,27 @@ onExtMessage('error', (payload) => {
   showError(t(data.errorKey, data.errorParams ?? {}))
 })
 
-/** 点击导出配置按钮 */
+// 导出文件夹选择对话框状态
+const exportDialog = ref<{ visible: boolean }>({ visible: false })
+
+/** 点击导出配置按钮，打开文件夹选择对话框 */
 function handleExport() {
   if (snippets.value.length === 0) {
     showError(t('importExport.noDataToExport'))
     return
   }
-  showConfirm({
-    title: t('importExport.exportConfirmTitle'),
-    content: t('importExport.exportConfirmContent'),
-    confirmLabel: t('importExport.exportConfig'),
-    onConfirm: () => {
-      postToExt('exportSnippets')
-    },
-  })
+  exportDialog.value.visible = true
+}
+
+/** 选择导出范围：folderId 为 undefined 表示导出全部 */
+function confirmExport(folderId?: string) {
+  exportDialog.value.visible = false
+  postToExt('exportSnippets', folderId ? { folderId } : {})
+}
+
+/** 取消导出 */
+function cancelExport() {
+  exportDialog.value.visible = false
 }
 
 /** 点击导入配置按钮 */
@@ -441,6 +592,11 @@ function handleListScroll() {
           {{ t('importExport.importConfig') }}
         </button>
       </div>
+      <!-- 新建文件夹按钮 -->
+      <button class="btn btn-secondary btn-sm new-folder-btn" @click="openCreateFolder">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        {{ t('folder.create') }}
+      </button>
     </div>
 
     <!-- 搜索框：列表为空时隐藏，与编辑页 form-input 风格统一 -->
@@ -500,45 +656,79 @@ function handleListScroll() {
         <p class="empty-desc">{{ t('list.empty') }}</p>
       </div>
 
-      <!-- 片段列表 -->
-      <div v-else class="snippet-items">
+      <!-- 片段分组列表：按文件夹折叠 -->
+      <div v-else class="folder-groups">
         <div
-          v-for="snippet in filteredSnippets"
-          :key="snippet.id"
-          class="snippet-item"
-          @mouseenter="handleItemMouseEnter($event, snippet)"
-          @mouseleave="handleItemMouseLeave"
+          v-for="group in groupedFolders"
+          :key="group.folder.id"
+          class="folder-group"
         >
-          <!-- 片段信息：名称、语言标签、前缀、描述 -->
-          <div class="item-main">
-            <div class="item-top">
-              <span class="item-name">{{ snippet.name }}</span>
-              <!-- 语言标签，使用 Iconify 图标 + 品牌色 -->
-              <span
-                v-for="lang in snippet.language.split(',').map((l: string) => l.trim())"
-                :key="lang"
-                class="lang-badge"
-                :style="{ backgroundColor: getLanguageColor(lang) + '22', color: getLanguageColor(lang), borderColor: getLanguageColor(lang) + '44' }"
-              >
-                <Icon v-if="lang !== '*'" :icon="getLanguageIcon(lang)" class="lang-badge-icon" />
-                <span class="lang-badge-text">{{ lang === '*' ? t('form.allLanguages') : lang }}</span>
-              </span>
-            </div>
-            <div class="item-meta">
-              <code class="item-prefix">{{ snippet.prefix }}</code>
-              <span v-if="snippet.description" class="item-desc">{{ snippet.description }}</span>
+          <!-- 文件夹头部：折叠箭头 + 名称 + 数量 + 操作按钮 -->
+          <div class="folder-header" @click="toggleFolder(group.folder.id)">
+            <svg
+              class="folder-arrow"
+              :class="{ 'is-collapsed': collapsedFolders.has(group.folder.id) }"
+              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            ><polyline points="6 9 12 15 18 9"/></svg>
+            <svg class="folder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span class="folder-name">{{ folderDisplayName(group.folder) }}</span>
+            <span class="folder-count">{{ group.snippets.length }}</span>
+            <!-- 文件夹操作：默认文件夹仅可见，不可重命名/删除 -->
+            <div v-if="group.folder.id !== DEFAULT_FOLDER_ID" class="folder-actions">
+              <button class="folder-action-btn" :title="t('folder.rename')" @click.stop="openRenameFolder(group.folder)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="folder-action-btn folder-action-danger" :title="t('folder.delete')" @click.stop="openDeleteFolder(group.folder)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
             </div>
           </div>
-          <!-- 操作按钮区：悬浮时显示 -->
-          <div class="item-actions">
-            <!-- 编辑按钮 -->
-            <button class="action-btn" :title="t('actions.edit')" @click.stop="handleEdit(snippet)">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <!-- 删除按钮 -->
-            <button class="action-btn action-btn-danger" :title="t('actions.delete')" @click.stop="handleDelete(snippet)">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
+
+          <!-- 文件夹内片段：折叠时隐藏 -->
+          <div v-show="!collapsedFolders.has(group.folder.id)" class="snippet-items">
+            <!-- 文件夹内无片段提示 -->
+            <div v-if="group.snippets.length === 0" class="folder-empty">
+              {{ t('folder.emptyHint') }}
+            </div>
+            <div
+              v-for="snippet in group.snippets"
+              :key="snippet.id"
+              class="snippet-item"
+              @mouseenter="handleItemMouseEnter($event, snippet)"
+              @mouseleave="handleItemMouseLeave"
+            >
+              <!-- 片段信息：名称、语言标签、前缀、描述 -->
+              <div class="item-main">
+                <div class="item-top">
+                  <span class="item-name">{{ snippet.name }}</span>
+                  <!-- 语言标签，使用 Iconify 图标 + 品牌色 -->
+                  <span
+                    v-for="lang in snippet.language.split(',').map((l: string) => l.trim())"
+                    :key="lang"
+                    class="lang-badge"
+                    :style="{ backgroundColor: getLanguageColor(lang) + '22', color: getLanguageColor(lang), borderColor: getLanguageColor(lang) + '44' }"
+                  >
+                    <Icon v-if="lang !== '*'" :icon="getLanguageIcon(lang)" class="lang-badge-icon" />
+                    <span class="lang-badge-text">{{ lang === '*' ? t('form.allLanguages') : lang }}</span>
+                  </span>
+                </div>
+                <div class="item-meta">
+                  <code class="item-prefix">{{ snippet.prefix }}</code>
+                  <span v-if="snippet.description" class="item-desc">{{ snippet.description }}</span>
+                </div>
+              </div>
+              <!-- 操作按钮区：悬浮时显示 -->
+              <div class="item-actions">
+                <!-- 编辑按钮 -->
+                <button class="action-btn" :title="t('actions.edit')" @click.stop="handleEdit(snippet)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <!-- 删除按钮 -->
+                <button class="action-btn action-btn-danger" :title="t('actions.delete')" @click.stop="handleDelete(snippet)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -610,6 +800,97 @@ function handleListScroll() {
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary btn-sm" @click="handleDuplicateCancel">{{ t('form.cancel') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 文件夹编辑对话框（新建/重命名） -->
+    <div v-if="folderDialog.visible" class="modal-overlay" @click.self="cancelFolderDialog">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <span class="modal-title">{{ folderDialog.mode === 'create' ? t('folder.createTitle') : t('folder.renameTitle') }}</span>
+        </div>
+        <div class="modal-body">
+          <input
+            v-model="folderDialog.name"
+            class="form-input"
+            :placeholder="t('folder.namePlaceholder')"
+            maxlength="50"
+            @keyup.enter="submitFolderDialog"
+          />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="cancelFolderDialog">{{ t('form.cancel') }}</button>
+          <button class="btn btn-primary btn-sm" @click="submitFolderDialog">{{ t('form.save') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除文件夹对话框：选择片段处理方式 -->
+    <div v-if="deleteFolderDialog.visible" class="modal-overlay" @click.self="cancelDeleteFolder">
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <span class="modal-title">{{ t('folder.deleteTitle') }}</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('folder.deleteContent', { name: deleteFolderDialog.name, count: deleteFolderDialog.count }) }}</p>
+          <!-- 仅当文件夹内有片段时才需要选择处理方式 -->
+          <div v-if="deleteFolderDialog.count > 0" class="strategy-options">
+            <button class="strategy-option" @click="confirmDeleteFolder('move')">
+              <div class="strategy-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><polyline points="9 14 12 11 15 14"/></svg>
+                <span class="strategy-name">{{ t('folder.deleteMove') }}</span>
+              </div>
+              <span class="strategy-desc">{{ t('folder.deleteMoveDesc') }}</span>
+            </button>
+            <button class="strategy-option strategy-option-danger" @click="confirmDeleteFolder('delete')">
+              <div class="strategy-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span class="strategy-name">{{ t('folder.deleteWithSnippets') }}</span>
+              </div>
+              <span class="strategy-desc">{{ t('folder.deleteWithSnippetsDesc') }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <!-- 空文件夹直接删除 -->
+          <template v-if="deleteFolderDialog.count === 0">
+            <button class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
+            <button class="btn btn-danger btn-sm" @click="confirmDeleteFolder('delete')">{{ t('folder.delete') }}</button>
+          </template>
+          <button v-else class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出范围选择对话框 -->
+    <div v-if="exportDialog.visible" class="modal-overlay" @click.self="cancelExport">
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <span class="modal-title">{{ t('importExport.exportConfirmTitle') }}</span>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('folder.exportSelectHint') }}</p>
+          <div class="export-options">
+            <!-- 导出全部 -->
+            <button class="export-option" @click="confirmExport()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span class="export-option-label">{{ t('folder.exportAll') }}</span>
+            </button>
+            <!-- 按文件夹导出 -->
+            <button
+              v-for="f in folders"
+              :key="f.id"
+              class="export-option"
+              @click="confirmExport(f.id)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span class="export-option-label">{{ folderDisplayName(f) }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="cancelExport">{{ t('form.cancel') }}</button>
         </div>
       </div>
     </div>
@@ -874,6 +1155,160 @@ function handleListScroll() {
 .snippet-items {
   @include flex-column;
   gap: 2px;
+}
+
+// ===== 文件夹分组 =====
+.folder-groups {
+  @include flex-column;
+  gap: 2px;
+}
+
+.folder-group {
+  @include flex-column;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: $bg-list-hover;
+
+    .folder-actions {
+      opacity: 1;
+    }
+  }
+}
+
+.folder-arrow {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: transform 0.15s ease;
+
+  // 折叠时箭头指向右侧
+  &.is-collapsed {
+    transform: rotate(-90deg);
+  }
+}
+
+.folder-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.folder-name {
+  flex: 1;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-foreground;
+  @include text-ellipsis;
+}
+
+.folder-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: $color-description;
+  background: $bg-code-block;
+  padding: 0 6px;
+  border-radius: 8px;
+  line-height: 16px;
+}
+
+.folder-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.folder-action-btn {
+  @include flex-center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: $color-foreground;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s, color 0.15s;
+
+  &:hover {
+    background: $bg-hover;
+    opacity: 1;
+  }
+}
+
+.folder-action-danger:hover {
+  color: $color-error;
+  background: rgba-color(#f48771, 0.1);
+}
+
+// 文件夹内片段缩进，体现层级关系
+.folder-group .snippet-items {
+  padding-left: 14px;
+}
+
+.folder-empty {
+  padding: 6px 10px;
+  font-size: $font-size-xs;
+  color: $color-description;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.new-folder-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+// ===== 导出选择 =====
+.export-options {
+  @include flex-column;
+  gap: $spacing-xs;
+  margin-top: $spacing-md;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 8px 12px;
+  border: 1px solid $border-input;
+  border-radius: $radius-md;
+  background: $bg-input;
+  color: $color-foreground;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: $bg-list-hover;
+    border-color: $color-focus;
+  }
+}
+
+.export-option-label {
+  flex: 1;
+  font-size: $font-size-base;
+  @include text-ellipsis;
+}
+
+.strategy-option-danger:hover {
+  border-color: $color-error;
 }
 
 .snippet-item {

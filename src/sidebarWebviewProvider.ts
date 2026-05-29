@@ -135,8 +135,50 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     switch (msg.type) {
       // 前端请求获取片段列表
       case 'getSnippets':
-        this.postToView('snippetsList', this.snippetService.getAll());
+        this.postSnippetsList();
         break;
+
+      // 前端请求创建文件夹
+      case 'createFolder': {
+        const { name } = msg.payload as { name: string };
+        const folder = await this.snippetService.createFolder(name ?? '');
+        if (folder) {
+          this.postFoldersList();
+          this.showNotification('success', 'folder.createSuccess', { name: folder.name });
+        } else {
+          // 名称为空或重名
+          this.showNotification('warning', 'folder.createFailed');
+        }
+        break;
+      }
+
+      // 前端请求重命名文件夹
+      case 'renameFolder': {
+        const { id, name } = msg.payload as { id: string; name: string };
+        const ok = await this.snippetService.renameFolder(id, name ?? '');
+        if (ok) {
+          this.postFoldersList();
+          this.showNotification('success', 'folder.renameSuccess', { name: (name ?? '').trim() });
+        } else {
+          this.showNotification('warning', 'folder.renameFailed');
+        }
+        break;
+      }
+
+      // 前端请求删除文件夹，action 决定片段处理方式（move/delete）
+      case 'deleteFolder': {
+        const { id, action } = msg.payload as { id: string; action: 'move' | 'delete' };
+        const ok = await this.snippetService.deleteFolder(id, action === 'delete' ? 'delete' : 'move');
+        if (ok) {
+          // 文件夹及片段归属变化，需同时刷新文件夹清单和片段列表
+          this.postFoldersList();
+          this.postSnippetsList();
+          this.showNotification('success', 'folder.deleteSuccess');
+        } else {
+          this.showNotification('warning', 'folder.deleteFailed');
+        }
+        break;
+      }
 
       // 前端请求打开编辑器（新建或编辑片段）
       case 'openEditor':
@@ -156,7 +198,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         const success = await this.snippetService.delete(id);
         if (success) {
           // 删除成功后刷新列表并发送通知
-          this.postToView('snippetsList', this.snippetService.getAll());
+          this.postSnippetsList();
           this.showNotification('success', 'delete.success', { name: snippetToDelete?.name ?? '' });
         } else {
           this.postToView('error', { errorKey: 'error.snippetNotFound' });
@@ -186,9 +228,10 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         break;
       }
 
-      // 前端请求导出代码片段
+      // 前端请求导出代码片段，payload.folderId 指定时仅导出该文件夹，缺省导出全部
       case 'exportSnippets': {
-        const result = await this.importExportService.exportSnippets();
+        const payload = (msg.payload ?? {}) as { folderId?: string };
+        const result = await this.importExportService.exportSnippets(payload.folderId);
         this.postToView('exportResult', { success: result.success, count: result.count });
         break;
       }
@@ -206,7 +249,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
           } else {
             // 导入成功后刷新列表
             this.postToView('importResult', result);
-            this.postToView('snippetsList', this.snippetService.getAll());
+            this.postSnippetsList();
           }
         }
         break;
@@ -255,7 +298,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
       // 前端请求清空所有片段数据
       case 'clearAllSnippets': {
         const count = await this.snippetService.clearAll();
-        this.postToView('snippetsList', this.snippetService.getAll());
+        this.postSnippetsList();
         this.showNotification('success', 'clearAll.success', { count: String(count) });
         break;
       }
@@ -265,8 +308,18 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
   /** 刷新侧边栏列表，由编辑器面板保存/删除片段后调用 */
   public refresh(): void {
     if (this.view) {
-      this.postToView('snippetsList', this.snippetService.getAll());
+      this.postSnippetsList();
     }
+  }
+
+  /** 下发片段列表（含运行时 folderId）给侧边栏 */
+  private postSnippetsList(): void {
+    this.postToView('snippetsList', this.snippetService.getAll());
+  }
+
+  /** 下发文件夹清单给侧边栏 */
+  private postFoldersList(): void {
+    this.postToView('foldersList', this.snippetService.getFolders());
   }
 
   /**
@@ -340,14 +393,16 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
 
     let html = await fs.promises.readFile(htmlPath, 'utf-8');
 
-    // 注入视图模式、语言偏好、排序偏好、版本号、存储路径和 VS Code API
+    // 注入视图模式、语言偏好、排序偏好、版本号、存储路径、文件夹清单和 VS Code API
     const locale = this.getLocale();
     const sortOrder = this.getSortOrder();
     const version = this.appVersion;
     const storagePath = this.snippetService.getStoragePath();
+    // 文件夹清单序列化注入，供前端首屏渲染分组结构
+    const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
     html = html.replace(
       '<head>',
-      `<head><script>window.__VIEW_MODE = 'sidebar'; window.__LOCALE = '${locale}'; window.__SORT_ORDER = '${sortOrder}'; window.__APP_VERSION = '${version}'; window.__STORAGE_PATH = '${storagePath.replace(/\\/g, '\\\\')}'; window.vscode = acquireVsCodeApi()</script>`
+      `<head><script>window.__VIEW_MODE = 'sidebar'; window.__LOCALE = '${locale}'; window.__SORT_ORDER = '${sortOrder}'; window.__APP_VERSION = '${version}'; window.__STORAGE_PATH = '${storagePath.replace(/\\/g, '\\\\')}'; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
     );
 
     // 替换 CSS 资源路径为 webview 可访问的 URI
