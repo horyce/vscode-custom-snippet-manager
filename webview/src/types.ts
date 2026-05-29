@@ -16,7 +16,24 @@ export interface Snippet {
   usageCount?: number
   /** 创建时间，ISO 8601 格式，用于按日期排序 */
   createdAt?: string
+  /** 所属文件夹 ID，由后端附加；缺省视为默认文件夹 */
+  folderId?: string
 }
+
+/** 文件夹数据结构，与后端 FolderMeta 对应 */
+export interface Folder {
+  /** 文件夹唯一标识符 */
+  id: string
+  /** 文件夹名称，默认文件夹为空字符串（前端用 i18n 显示） */
+  name: string
+  /** 创建时间，ISO 8601 格式 */
+  createdAt: string
+  /** 排序序号 */
+  order: number
+}
+
+/** 默认文件夹 ID，需与后端 DEFAULT_FOLDER_ID 保持一致 */
+export const DEFAULT_FOLDER_ID = 'default'
 
 /** 排序方向类型：desc 为由新至旧，asc 为由旧至新 */
 export type SortOrder = 'desc' | 'asc'
@@ -58,6 +75,10 @@ export type MessageType =
   | 'localeChanged'
   | 'changeSortOrder'
   | 'clearAllSnippets'
+  | 'foldersList'
+  | 'createFolder'
+  | 'renameFolder'
+  | 'deleteFolder'
   | 'error'
 
 /** Webview 发送给扩展的消息格式 */
