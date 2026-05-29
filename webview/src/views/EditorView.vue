@@ -7,7 +7,8 @@
  */
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Snippet } from '../types'
+import type { Snippet, Folder } from '../types'
+import { DEFAULT_FOLDER_ID } from '../types'
 import { SUPPORTED_LANGUAGES } from '../utils/languages'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import LanguageSelect from '../components/LanguageSelect.vue'
@@ -17,6 +18,8 @@ const { t, locale } = useI18n()
 
 // 当前编辑的片段数据，为 null 时表示新建模式
 const editingSnippet = ref<Snippet | null>(null)
+// 文件夹清单，从后端注入的初始数据初始化，供所属文件夹下拉选择
+const folders = ref<Folder[]>(Array.isArray(window.__FOLDERS) ? window.__FOLDERS : [])
 // 表单数据
 const form = ref({
   name: '',
@@ -24,6 +27,7 @@ const form = ref({
   body: '',
   description: '',
   language: '*',
+  folderId: DEFAULT_FOLDER_ID,
 })
 // 保存中状态，防止重复提交
 const saving = ref(false)
@@ -43,6 +47,14 @@ const languageOptions = computed(() =>
   }))
 )
 
+/** 文件夹下拉选项，默认文件夹用 i18n 名称 */
+const folderOptions = computed(() =>
+  folders.value.map((f) => ({
+    value: f.id,
+    label: f.id === DEFAULT_FOLDER_ID ? t('folder.defaultName') : f.name,
+  }))
+)
+
 // 监听编辑片段变化，回填或清空表单
 watch(
   () => editingSnippet.value,
@@ -56,11 +68,13 @@ watch(
         body: val.body,
         description: val.description,
         language: val.language,
+        // 片段缺失 folderId 时归为默认文件夹
+        folderId: val.folderId ?? DEFAULT_FOLDER_ID,
       }
     } else {
-      // 新建模式：清空表单
+      // 新建模式：清空表单，默认归入默认文件夹
       isEditing.value = false
-      form.value = { name: '', prefix: '', body: '', description: '', language: '*' }
+      form.value = { name: '', prefix: '', body: '', description: '', language: '*', folderId: DEFAULT_FOLDER_ID }
     }
     // 切换模式时清除校验错误
     errors.value = {}
@@ -257,6 +271,21 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- 所属文件夹选择 -->
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">{{ t('folder.belongTo') }}</label>
+          <div class="select-wrapper">
+            <select v-model="form.folderId" class="form-input folder-select">
+              <option v-for="opt in folderOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 底部操作栏 -->
@@ -416,6 +445,28 @@ onMounted(() => {
 .form-input {
   @include input-base;
   padding: 9px $spacing-md;
+}
+
+// ===== 所属文件夹下拉 =====
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.folder-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .has-error .form-input,

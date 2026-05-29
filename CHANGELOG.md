@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 [中文更新日志](./CHANGELOG.zh-CN.md)
 
+## [Unreleased]
+
+### Added
+
+- **Folders**: Added folder support to organize snippets — create, rename, and delete folders, and assign a folder when creating or editing a snippet
+- **Folder Export**: Export now lets you choose a specific folder or all snippets
+
+### Changed
+
+- **Sidebar Layout**: Sidebar now displays snippets as a collapsible folder-grouped tree
+- **Storage Structure**: Snippets are now stored in separate files per folder; existing data is migrated automatically and the original data is backed up
+
 ## [1.2.0] - 2026-05-26
 
 ### Added

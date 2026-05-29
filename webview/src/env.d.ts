@@ -24,6 +24,8 @@ declare global {
     __APP_VERSION?: string
     /** 代码片段存储目录路径，由后端注入 */
     __STORAGE_PATH?: string
+    /** 文件夹清单，由后端注入，供首屏渲染分组结构和编辑器下拉框 */
+    __FOLDERS?: import('./types').Folder[]
   }
 }
 
