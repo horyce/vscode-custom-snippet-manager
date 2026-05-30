@@ -28,6 +28,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Save Button**: Fixed save button becoming clickable again before the backend responds, which could cause duplicate snippet creation
 - **Language Badge**: Fixed "ALL" label on language badges not being translated when a snippet applies to all languages
 - **Language Selector**: Fixed language selector showing only an icon with no text when "All" is selected, now displays both icon and label
+- **Settings Icons**: Fixed settings page icons (GitHub, Feedback) not displaying due to missing pre-extracted icon data, which caused runtime network requests blocked by CSP
 
 ## [1.2.0] - 2026-05-26
 
