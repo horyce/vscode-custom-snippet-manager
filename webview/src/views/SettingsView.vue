@@ -5,7 +5,6 @@
  * 包含关于页面，展示插件名称、版本号、GitHub 地址等基础信息
  * 后续可扩展实际设置功能
  */
-import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import { postToExt } from '../composables/useMessage'
 import { useConfirm } from '../composables/useConfirm'

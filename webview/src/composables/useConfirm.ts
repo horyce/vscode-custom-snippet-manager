@@ -3,9 +3,6 @@
  * 封装确认弹窗的状态管理和操作逻辑，供多个视图复用
  * 配合 ConfirmDialog 组件使用
  */
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-
 /** 确认弹窗配置 */
 interface ConfirmOptions {
   title: string

@@ -2,8 +2,6 @@
  * 通知提示 composable
  * 封装通知状态管理和显示/隐藏逻辑，供多个视图复用
  */
-import { ref } from 'vue'
-
 /** 通知类型 */
 export type NotificationType = 'success' | 'warning' | 'error'
 
