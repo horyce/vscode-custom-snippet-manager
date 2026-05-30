@@ -4,7 +4,6 @@
  * 应用根组件
  * 侧边栏和编辑器共用同一套 Vue 构建产物，通过视图模式区分
  */
-import { computed } from 'vue'
 import SidebarView from './views/SidebarView.vue'
 import EditorView from './views/EditorView.vue'
 

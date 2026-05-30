@@ -12,7 +12,6 @@
  * previewCard.value?.show(event, snippet)
  * previewCard.value?.hide()
  */
-import { ref } from 'vue'
 import type { Snippet } from '../types'
 import { highlightCodeString } from '../utils/codemirror-langs'
 

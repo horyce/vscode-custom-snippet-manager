@@ -6,7 +6,6 @@
  * 选中其他语言时自动取消 "所有语言"
  * 逗号分隔存储，如 "javascript,typescript"
  */
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
 
 /** 组件属性定义 */
