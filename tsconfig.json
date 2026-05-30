@@ -9,7 +9,8 @@
 		"rootDir": "src",
 		"strict": true,
 		"resolveJsonModule": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"skipLibCheck": true
 	},
 	"include": ["src/**/*", "locales.json"],
 	"exclude": ["webview", "node_modules", "out", "dist"]
