@@ -38,7 +38,7 @@ const serverError = ref('')
 // 语言下拉选项，包含图标信息（computed 确保语言切换时标签更新）
 const languageOptions = computed(() =>
   SUPPORTED_LANGUAGES.map((l) => ({
-    label: l.value === '*' ? t('form.allLanguages') : l.label,
+    label: l.value === '*' ? t('filter.all') : l.label,
     value: l.value,
     icon: l.icon,
   }))

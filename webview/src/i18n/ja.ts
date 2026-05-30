@@ -27,7 +27,6 @@ export default {
     descriptionPlaceholder: 'スニペットの説明を入力',
     language: '対象言語',
     languagePlaceholder: '対象言語を選択（複数選択可）',
-    allLanguages: 'すべての言語',
     save: '保存',
     cancel: 'キャンセル',
     nameRequired: '名前を入力してください',
