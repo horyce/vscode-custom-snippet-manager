@@ -1,5 +1,7 @@
 <!-- 策略选项按钮：图标 + 名称 + 描述 -->
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
+
 defineProps<{
   /** 图标名称，如 carbon:edit */
   icon: string
