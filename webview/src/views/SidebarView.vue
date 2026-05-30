@@ -6,23 +6,24 @@
  * 操作按钮使用原生 HTML 确保在 webview 中点击可靠
  * 删除确认弹窗使用自定义浮层替代 n-modal，避免 teleport 兼容问题
  */
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Fuse from 'fuse.js'
 import type { Snippet, SortOrder, Folder } from '../types'
 import { DEFAULT_FOLDER_ID } from '../types'
-import { SUPPORTED_LANGUAGES, getLanguageColor, getLanguageIcon } from '../utils/languages'
+import { SUPPORTED_LANGUAGES } from '../utils/languages'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import { useNotification } from '../composables/useNotification'
 import { useConfirm } from '../composables/useConfirm'
-import { highlightCodeString } from '../utils/codemirror-langs'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import NotificationBar from '../components/NotificationBar.vue'
 import StrategyOption from '../components/StrategyOption.vue'
 import BaseButton from '../components/BaseButton.vue'
 import SearchInput from '../components/SearchInput.vue'
+import SnippetPreviewCard from '../components/SnippetPreviewCard.vue'
+import FolderGroup from '../components/FolderGroup.vue'
 import SettingsView from './SettingsView.vue'
 import { SUPPORTED_LOCALES } from '../i18n'
 
@@ -33,13 +34,9 @@ const { confirmState, showConfirm, handleConfirmOk, handleConfirmCancel } = useC
 // 当前视图：'list' 为片段列表，'settings' 为设置页面
 const currentView = ref<'list' | 'settings'>('list')
 
-// 切换视图时清除预览状态
+// 切换视图时隐藏预览卡片
 watch(currentView, () => {
-  previewState.value.visible = false
-  if (previewTimer) {
-    clearTimeout(previewTimer)
-    previewTimer = null
-  }
+  previewCard.value?.hide()
 })
 
 // 片段列表数据
@@ -109,13 +106,6 @@ function toggleSortOrder() {
 
 onMounted(() => {
   postToExt('getSnippets')
-})
-
-onBeforeUnmount(() => {
-  if (previewTimer) {
-    clearTimeout(previewTimer)
-    previewTimer = null
-  }
 })
 
 // 语言下拉选项，动态生成以支持 i18n，包含图标信息
@@ -574,79 +564,22 @@ function cancelPlacement() {
   postToExt('importPlacementChoice', null)
 }
 
-// ===== 悬浮预览卡片 =====
-const previewState = ref<{
-  visible: boolean
-  snippet: Snippet | null
-  top: number
-  left: number
-  width: number
-  placement: 'top' | 'bottom'
-  html: string
-}>({
-  visible: false,
-  snippet: null,
-  top: 0,
-  left: 0,
-  width: 0,
-  placement: 'top',
-  html: '',
-})
+// 预览卡片组件引用
+const previewCard = ref<InstanceType<typeof SnippetPreviewCard> | null>(null)
 
-let previewTimer: ReturnType<typeof setTimeout> | null = null
-// 预览卡片最大显示行数
-const PREVIEW_MAX_LINES = 8
-
-/** 截取代码前 N 行 */
-function getPreviewLines(body: string, maxLines: number): string {
-  const lines = body.split('\n')
-  if (lines.length <= maxLines) return body
-  return lines.slice(0, maxLines).join('\n')
-}
-
-/** 鼠标进入列表项，延迟显示预览 */
+/** 鼠标进入列表项，委托预览卡片显示 */
 function handleItemMouseEnter(event: MouseEvent, snippet: Snippet) {
-  if (previewTimer) clearTimeout(previewTimer)
-  // 必须在 setTimeout 外捕获元素引用，因为 currentTarget 在异步回调中为 null
-  const el = event.currentTarget as HTMLElement
-  previewTimer = setTimeout(() => {
-    const itemRect = el.getBoundingClientRect()
-    // 使用视口坐标定位，避免被滚动容器裁剪
-    const top = itemRect.top
-    const left = itemRect.left
-    const width = itemRect.width
-    // 上方空间不足 150px 时改为下方显示
-    const placement = top < 150 ? 'bottom' : 'top'
-
-    const previewCode = getPreviewLines(snippet.body, PREVIEW_MAX_LINES)
-    const lang = snippet.language.split(',')[0].trim()
-    const html = highlightCodeString(previewCode, lang)
-    const hasMore = snippet.body.split('\n').length > PREVIEW_MAX_LINES
-
-    previewState.value = {
-      visible: true,
-      snippet,
-      top,
-      left,
-      width,
-      placement,
-      html: hasMore ? html + '<span class="preview-more">...</span>' : html,
-    }
-  }, 400)
+  previewCard.value?.show(event, snippet)
 }
 
-/** 鼠标离开列表项，隐藏预览 */
+/** 鼠标离开列表项，委托预览卡片隐藏 */
 function handleItemMouseLeave() {
-  if (previewTimer) {
-    clearTimeout(previewTimer)
-    previewTimer = null
-  }
-  previewState.value.visible = false
+  previewCard.value?.hide()
 }
 
 /** 列表滚动时隐藏预览卡片 */
 function handleListScroll() {
-  previewState.value.visible = false
+  previewCard.value?.hide()
 }
 </script>
 
@@ -716,102 +649,27 @@ function handleListScroll() {
 
       <!-- 片段分组列表：按文件夹折叠 -->
       <div v-else class="folder-groups">
-        <div
+        <FolderGroup
           v-for="group in groupedFolders"
           :key="group.folder.id"
-          class="folder-group"
-        >
-          <!-- 文件夹头部：折叠箭头 + 名称 + 数量 + 操作按钮 -->
-          <div class="folder-header" @click="toggleFolder(group.folder.id)">
-            <Icon
-              icon="carbon:chevron-down"
-              class="folder-arrow"
-              :class="{ 'is-collapsed': collapsedFolders.has(group.folder.id) }"
-              width="12"
-              height="12"
-            />
-            <Icon icon="carbon:folder" class="folder-icon" width="14" height="14" />
-            <span class="folder-name">{{ folderDisplayName(group.folder) }}</span>
-            <!-- 文件夹操作：放在数量左侧，使数量始终贴右，与默认文件夹对齐 -->
-            <div v-if="group.folder.id !== DEFAULT_FOLDER_ID" class="folder-actions">
-              <button class="folder-action-btn" :title="t('folder.rename')" @click.stop="openRenameFolder(group.folder)">
-                <Icon icon="carbon:edit" width="12" height="12" />
-              </button>
-              <button class="folder-action-btn folder-action-danger" :title="t('folder.delete')" @click.stop="openDeleteFolder(group.folder)">
-                <Icon icon="carbon:trash-can" width="12" height="12" />
-              </button>
-            </div>
-            <span class="folder-count">{{ group.snippets.length }}</span>
-          </div>
-
-          <!-- 文件夹内片段：折叠时隐藏 -->
-          <div v-show="!collapsedFolders.has(group.folder.id)" class="snippet-items">
-            <!-- 文件夹内无片段提示 -->
-            <div v-if="group.snippets.length === 0" class="folder-empty">
-              {{ t('folder.emptyHint') }}
-            </div>
-            <div
-              v-for="snippet in group.snippets"
-              :key="snippet.id"
-              class="snippet-item"
-              @mouseenter="handleItemMouseEnter($event, snippet)"
-              @mouseleave="handleItemMouseLeave"
-            >
-              <!-- 片段信息：名称、语言标签、前缀、描述 -->
-              <div class="item-main">
-                <div class="item-top">
-                  <span class="item-name">{{ snippet.name }}</span>
-                  <!-- 语言标签，使用 Iconify 图标 + 品牌色 -->
-                  <span
-                    v-for="lang in snippet.language.split(',').map((l: string) => l.trim())"
-                    :key="lang"
-                    class="lang-badge"
-                    :style="{ backgroundColor: getLanguageColor(lang) + '22', color: getLanguageColor(lang), borderColor: getLanguageColor(lang) + '44' }"
-                  >
-                    <Icon v-if="lang !== '*'" :icon="getLanguageIcon(lang)" class="lang-badge-icon" />
-                    <span class="lang-badge-text">{{ lang === '*' ? t('form.allLanguages') : lang }}</span>
-                  </span>
-                </div>
-                <div class="item-meta">
-                  <code class="item-prefix">{{ snippet.prefix }}</code>
-                  <span v-if="snippet.description" class="item-desc">{{ snippet.description }}</span>
-                </div>
-              </div>
-              <!-- 操作按钮区：悬浮时显示 -->
-              <div class="item-actions">
-                <!-- 编辑按钮 -->
-                <button class="action-btn" :title="t('actions.edit')" @click.stop="handleEdit(snippet)">
-                  <Icon icon="carbon:edit" width="14" height="14" />
-                </button>
-                <!-- 删除按钮 -->
-                <button class="action-btn action-btn-danger" :title="t('actions.delete')" @click.stop="handleDelete(snippet)">
-                  <Icon icon="carbon:trash-can" width="14" height="14" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+          :folder="group.folder"
+          :snippets="group.snippets"
+          :is-collapsed="collapsedFolders.has(group.folder.id)"
+          :default-folder-id="DEFAULT_FOLDER_ID"
+          :folder-display-name="folderDisplayName(group.folder)"
+          @toggle="toggleFolder"
+          @rename="openRenameFolder"
+          @delete-folder="openDeleteFolder"
+          @edit-snippet="handleEdit"
+          @delete-snippet="handleDelete"
+          @snippet-mouseenter="handleItemMouseEnter"
+          @snippet-mouseleave="handleItemMouseLeave"
+        />
       </div>
     </div>
 
     <!-- 悬浮预览卡片 -->
-    <transition name="preview-fade">
-      <div
-        v-if="previewState.visible && previewState.snippet"
-        class="preview-card"
-        :class="`preview-${previewState.placement}`"
-        :style="{ top: previewState.top + 'px', left: previewState.left + 'px', width: previewState.width + 'px' }"
-      >
-        <div class="preview-header">
-          <span class="preview-name">{{ previewState.snippet.name }}</span>
-          <code class="preview-prefix">{{ previewState.snippet.prefix }}</code>
-        </div>
-        <pre class="preview-code" v-html="previewState.html"></pre>
-        <div v-if="previewState.snippet.description" class="preview-desc">
-          {{ previewState.snippet.description }}
-        </div>
-      </div>
-    </transition>
+    <SnippetPreviewCard ref="previewCard" />
 
     <!-- 通用确认弹窗（删除/导入/导出等操作） -->
     <ConfirmDialog
@@ -1128,118 +986,10 @@ function handleListScroll() {
   line-height: 1.6;
 }
 
-.snippet-items {
-  @include flex-column;
-  gap: 2px;
-}
-
 // ===== 文件夹分组 =====
 .folder-groups {
   @include flex-column;
   gap: 2px;
-}
-
-.folder-group {
-  @include flex-column;
-}
-
-.folder-header {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 6px;
-  border-radius: $radius-sm;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.15s ease;
-
-  &:hover {
-    background-color: $bg-list-hover;
-
-    .folder-actions {
-      opacity: 1;
-    }
-  }
-}
-
-.folder-arrow {
-  flex-shrink: 0;
-  opacity: 0.7;
-  transition: transform 0.15s ease;
-
-  // 折叠时箭头指向右侧
-  &.is-collapsed {
-    transform: rotate(-90deg);
-  }
-}
-
-.folder-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.folder-name {
-  flex: 1;
-  font-size: $font-size-sm;
-  font-weight: 600;
-  color: $color-foreground;
-  @include text-ellipsis;
-}
-
-.folder-count {
-  flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 600;
-  color: $color-description;
-  background: $bg-code-block;
-  padding: 0 6px;
-  border-radius: 8px;
-  line-height: 16px;
-}
-
-.folder-actions {
-  flex-shrink: 0;
-  display: flex;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.folder-action-btn {
-  @include flex-center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: $color-foreground;
-  opacity: 0.6;
-  cursor: pointer;
-  transition: background-color 0.15s, opacity 0.15s, color 0.15s;
-
-  &:hover {
-    background: $bg-hover;
-    opacity: 1;
-  }
-}
-
-.folder-action-danger:hover {
-  color: $color-error;
-  background: rgba-color(#f48771, 0.1);
-}
-
-// 文件夹内片段缩进，体现层级关系
-.folder-group .snippet-items {
-  padding-left: 14px;
-}
-
-.folder-empty {
-  padding: 6px 10px;
-  font-size: $font-size-xs;
-  color: $color-description;
-  opacity: 0.7;
-  font-style: italic;
 }
 
 .new-folder-btn {
@@ -1330,223 +1080,6 @@ function handleListScroll() {
 .placement-note {
   font-size: $font-size-xs;
   color: $color-description;
-}
-
-.snippet-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm 10px;
-  border-radius: $radius-md;
-  cursor: default;
-  transition: background-color 0.15s ease;
-
-  &:hover {
-    background-color: $bg-list-hover;
-
-    .item-actions {
-      opacity: 1;
-    }
-  }
-}
-
-.item-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-
-.item-name {
-  font-size: $font-size-base;
-  font-weight: 600;
-  color: $color-foreground;
-  @include text-ellipsis;
-}
-
-.lang-badge {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 0 5px;
-  border-radius: $radius-sm;
-  border: 1px solid;
-  line-height: 16px;
-  letter-spacing: 0.3px;
-}
-
-.lang-badge-icon {
-  font-size: $font-size-xs;
-}
-
-.lang-badge-text {
-  font-size: 9px;
-  text-transform: uppercase;
-}
-
-.item-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.item-prefix {
-  flex-shrink: 0;
-  font-size: $font-size-xs;
-  @include code-text;
-  background-color: $bg-code-block;
-  padding: 1px 5px;
-  border-radius: $radius-sm;
-}
-
-.item-desc {
-  font-size: $font-size-xs;
-  color: $color-description;
-  @include text-ellipsis;
-}
-
-// ===== 悬浮预览卡片 =====
-
-.preview-card {
-  position: fixed;
-  z-index: 100;
-  border: 1px solid $border-dropdown;
-  border-radius: $radius-lg;
-  background: $bg-widget;
-  box-shadow: $shadow-dropdown;
-  overflow: hidden;
-  pointer-events: none;
-
-  // 默认在列表项上方显示
-  &.preview-top {
-    transform: translateY(-100%);
-  }
-
-  // 上方空间不足时在列表项下方显示
-  &.preview-bottom {
-    transform: translateY(4px);
-  }
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  border-bottom: 1px solid $border-panel;
-}
-
-.preview-name {
-  font-size: $font-size-sm;
-  font-weight: 600;
-  color: $color-foreground;
-  @include text-ellipsis;
-  flex: 1;
-}
-
-.preview-prefix {
-  font-size: $font-size-xs;
-  @include code-text;
-  background-color: $bg-code-block;
-  padding: 1px 5px;
-  border-radius: $radius-sm;
-  flex-shrink: 0;
-}
-
-.preview-code {
-  margin: 0;
-  padding: $spacing-sm $spacing-md;
-  max-height: 200px;
-  overflow: auto;
-  font-family: $font-mono;
-  font-size: $font-size-xs;
-  line-height: 1.5;
-  color: $color-foreground;
-  white-space: pre;
-  tab-size: 2;
-
-  :deep(.tok-keyword) { color: #c678dd; }
-  :deep(.tok-string) { color: #98c379; }
-  :deep(.tok-number) { color: #d19a66; }
-  :deep(.tok-comment) { color: #5c6370; font-style: italic; }
-  :deep(.tok-functionName) { color: #61afef; }
-  :deep(.tok-variableName) { color: #e06c75; }
-  :deep(.tok-typeName) { color: #e5c07b; }
-  :deep(.tok-propertyName) { color: #e06c75; }
-  :deep(.tok-operator) { color: #56b6c2; }
-  :deep(.tok-punctuation) { color: #abb2bf; }
-  :deep(.tok-meta) { color: #abb2bf; }
-  :deep(.tok-atom) { color: #d19a66; }
-
-  :deep(.preview-more) {
-    display: block;
-    padding-top: $spacing-xs;
-    color: $color-description;
-    font-style: italic;
-  }
-}
-
-.preview-desc {
-  padding: $spacing-xs $spacing-md $spacing-sm;
-  font-size: $font-size-xs;
-  color: $color-description;
-  line-height: 1.4;
-  border-top: 1px solid $border-panel;
-}
-
-.preview-fade-enter-active {
-  transition: opacity 0.15s ease-out;
-}
-
-.preview-fade-leave-active {
-  transition: opacity 0.1s ease-in;
-}
-
-.preview-fade-enter-from,
-.preview-fade-leave-to {
-  opacity: 0;
-}
-
-// ===== 操作按钮 =====
-.item-actions {
-  flex-shrink: 0;
-  display: flex;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.action-btn {
-  @include flex-center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  color: $color-foreground;
-  opacity: 0.6;
-  cursor: pointer;
-  transition: background-color 0.15s, opacity 0.15s, color 0.15s;
-
-  &:hover {
-    background: $bg-hover;
-    opacity: 1;
-  }
-}
-
-.action-btn-danger:hover {
-  color: $color-error;
-  background: rgba-color(#f48771, 0.1);
 }
 
 // ===== 弹窗内容样式 =====
