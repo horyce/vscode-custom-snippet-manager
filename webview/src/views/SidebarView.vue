@@ -895,195 +895,181 @@ function handleListScroll() {
     />
 
     <!-- 重复片段策略选择对话框 -->
-    <div v-if="duplicateDialog.visible" class="modal-overlay" @click.self="handleDuplicateCancel">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <span class="modal-title">{{ t('importExport.duplicateTitle') }}</span>
+    <ConfirmDialog
+      :visible="duplicateDialog.visible"
+      :title="t('importExport.duplicateTitle')"
+      large
+      @cancel="handleDuplicateCancel"
+    >
+      <template #body>
+        <p>{{ t('importExport.duplicateContent', { count: duplicateDialog.count }) }}</p>
+        <div class="strategy-options">
+          <button class="strategy-option" @click="handleDuplicateStrategy('overwrite')">
+            <div class="strategy-header">
+              <Icon icon="carbon:edit" width="16" height="16" />
+              <span class="strategy-name">{{ t('importExport.overwrite') }}</span>
+            </div>
+            <span class="strategy-desc">{{ t('importExport.overwriteDesc') }}</span>
+          </button>
+          <button class="strategy-option" @click="handleDuplicateStrategy('skip')">
+            <div class="strategy-header">
+              <Icon icon="carbon:error-outline" width="16" height="16" />
+              <span class="strategy-name">{{ t('importExport.skip') }}</span>
+            </div>
+            <span class="strategy-desc">{{ t('importExport.skipDesc') }}</span>
+          </button>
+          <button class="strategy-option" @click="handleDuplicateStrategy('merge')">
+            <div class="strategy-header">
+              <Icon icon="carbon:link" width="16" height="16" />
+              <span class="strategy-name">{{ t('importExport.merge') }}</span>
+            </div>
+            <span class="strategy-desc">{{ t('importExport.mergeDesc') }}</span>
+          </button>
         </div>
-        <div class="modal-body">
-          <p>{{ t('importExport.duplicateContent', { count: duplicateDialog.count }) }}</p>
-          <!-- 三个策略选项卡 -->
-          <div class="strategy-options">
-            <button class="strategy-option" @click="handleDuplicateStrategy('overwrite')">
-              <div class="strategy-header">
-                <Icon icon="carbon:edit" width="16" height="16" />
-                <span class="strategy-name">{{ t('importExport.overwrite') }}</span>
-              </div>
-              <span class="strategy-desc">{{ t('importExport.overwriteDesc') }}</span>
-            </button>
-            <button class="strategy-option" @click="handleDuplicateStrategy('skip')">
-              <div class="strategy-header">
-                <Icon icon="carbon:error-outline" width="16" height="16" />
-                <span class="strategy-name">{{ t('importExport.skip') }}</span>
-              </div>
-              <span class="strategy-desc">{{ t('importExport.skipDesc') }}</span>
-            </button>
-            <button class="strategy-option" @click="handleDuplicateStrategy('merge')">
-              <div class="strategy-header">
-                <Icon icon="carbon:link" width="16" height="16" />
-                <span class="strategy-name">{{ t('importExport.merge') }}</span>
-              </div>
-              <span class="strategy-desc">{{ t('importExport.mergeDesc') }}</span>
-            </button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="handleDuplicateCancel">{{ t('form.cancel') }}</button>
-        </div>
-      </div>
-    </div>
+      </template>
+      <template #footer>
+        <button class="btn btn-secondary btn-sm" @click="handleDuplicateCancel">{{ t('form.cancel') }}</button>
+      </template>
+    </ConfirmDialog>
 
     <!-- 文件夹编辑对话框（新建/重命名） -->
-    <div v-if="folderDialog.visible" class="modal-overlay" @click.self="cancelFolderDialog">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <span class="modal-title">{{ folderDialog.mode === 'create' ? t('folder.createTitle') : t('folder.renameTitle') }}</span>
+    <ConfirmDialog
+      :visible="folderDialog.visible"
+      :title="folderDialog.mode === 'create' ? t('folder.createTitle') : t('folder.renameTitle')"
+      @confirm="submitFolderDialog"
+      @cancel="cancelFolderDialog"
+    >
+      <template #body>
+        <input
+          v-model="folderDialog.name"
+          class="form-input"
+          :placeholder="t('folder.namePlaceholder')"
+          maxlength="50"
+          @keyup.enter="submitFolderDialog"
+        />
+      </template>
+    </ConfirmDialog>
+
+    <!-- 删除文件夹对话框：选择片段处理方式 -->
+    <ConfirmDialog
+      :visible="deleteFolderDialog.visible"
+      :title="t('folder.deleteTitle')"
+      large
+      @cancel="cancelDeleteFolder"
+    >
+      <template #body>
+        <p>{{ t('folder.deleteContent', { name: deleteFolderDialog.name, count: deleteFolderDialog.count }) }}</p>
+        <div v-if="deleteFolderDialog.count > 0" class="strategy-options">
+          <button class="strategy-option" @click="confirmDeleteFolder('move')">
+            <div class="strategy-header">
+              <Icon icon="carbon:folder" width="16" height="16" />
+              <span class="strategy-name">{{ t('folder.deleteMove') }}</span>
+            </div>
+            <span class="strategy-desc">{{ t('folder.deleteMoveDesc') }}</span>
+          </button>
+          <button class="strategy-option strategy-option-danger" @click="confirmDeleteFolder('delete')">
+            <div class="strategy-header">
+              <Icon icon="carbon:trash-can" width="16" height="16" />
+              <span class="strategy-name">{{ t('folder.deleteWithSnippets') }}</span>
+            </div>
+            <span class="strategy-desc">{{ t('folder.deleteWithSnippetsDesc') }}</span>
+          </button>
         </div>
-        <div class="modal-body">
+      </template>
+      <template #footer>
+        <template v-if="deleteFolderDialog.count === 0">
+          <button class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
+          <button class="btn btn-danger btn-sm" @click="confirmDeleteFolder('delete')">{{ t('folder.delete') }}</button>
+        </template>
+        <button v-else class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
+      </template>
+    </ConfirmDialog>
+
+    <!-- 导出范围选择对话框（多选文件夹，每个文件夹各导出一个 JSON） -->
+    <ConfirmDialog
+      :visible="exportDialog.visible"
+      :title="t('importExport.exportConfirmTitle')"
+      large
+      @cancel="cancelExport"
+    >
+      <template #body>
+        <p>{{ t('folder.exportSelectHint') }}</p>
+        <div class="export-options">
+          <label class="export-check-item export-check-all">
+            <input type="checkbox" :checked="exportAllSelected" @change="toggleExportAll" />
+            <span class="export-option-label">{{ t('folder.exportAll') }}</span>
+          </label>
+          <label
+            v-for="f in folders"
+            :key="f.id"
+            class="export-check-item"
+          >
+            <input
+              type="checkbox"
+              :checked="exportDialog.selectedIds.has(f.id)"
+              @change="toggleExportFolder(f.id)"
+            />
+            <Icon icon="carbon:folder" width="14" height="14" />
+            <span class="export-option-label">{{ folderDisplayName(f) }}</span>
+          </label>
+        </div>
+      </template>
+      <template #footer>
+        <button class="btn btn-secondary btn-sm" @click="cancelExport">{{ t('form.cancel') }}</button>
+        <button
+          class="btn btn-primary btn-sm"
+          :disabled="exportDialog.selectedIds.size === 0"
+          @click="confirmExport"
+        >{{ t('importExport.exportConfig') }}</button>
+      </template>
+    </ConfirmDialog>
+
+    <!-- 导入存放方式选择对话框 -->
+    <ConfirmDialog
+      :visible="placementDialog.visible"
+      :title="t('importExport.placementTitle')"
+      large
+      @cancel="cancelPlacement"
+    >
+      <template #body>
+        <p>{{ t('importExport.placementHint', { count: placementDialog.count }) }}</p>
+        <div class="placement-modes">
+          <label class="placement-mode">
+            <input type="radio" value="new" v-model="placementDialog.mode" />
+            <span>{{ t('importExport.placementNew') }}</span>
+          </label>
+          <label class="placement-mode">
+            <input type="radio" value="existing" v-model="placementDialog.mode" />
+            <span>{{ t('importExport.placementExisting') }}</span>
+          </label>
+        </div>
+        <div v-if="placementDialog.mode === 'new'" class="placement-field">
           <input
-            v-model="folderDialog.name"
+            v-model="placementDialog.newName"
             class="form-input"
             :placeholder="t('folder.namePlaceholder')"
             maxlength="50"
-            @keyup.enter="submitFolderDialog"
+            @input="placementDialog.nameError = ''"
+            @keyup.enter="confirmPlacement"
           />
+          <span v-if="placementDialog.nameError" class="placement-error">
+            {{ t(placementDialog.nameError) }}
+          </span>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="cancelFolderDialog">{{ t('form.cancel') }}</button>
-          <button class="btn btn-primary btn-sm" @click="submitFolderDialog">{{ t('form.save') }}</button>
+        <div v-else class="placement-field">
+          <LanguageSelect
+            v-model="placementDialog.targetFolderId"
+            :options="placementFolderOptions"
+            :placeholder="t('folder.namePlaceholder')"
+          />
+          <span class="placement-note">{{ t('importExport.placementExistingNote') }}</span>
         </div>
-      </div>
-    </div>
-
-    <!-- 删除文件夹对话框：选择片段处理方式 -->
-    <div v-if="deleteFolderDialog.visible" class="modal-overlay" @click.self="cancelDeleteFolder">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <span class="modal-title">{{ t('folder.deleteTitle') }}</span>
-        </div>
-        <div class="modal-body">
-          <p>{{ t('folder.deleteContent', { name: deleteFolderDialog.name, count: deleteFolderDialog.count }) }}</p>
-          <!-- 仅当文件夹内有片段时才需要选择处理方式 -->
-          <div v-if="deleteFolderDialog.count > 0" class="strategy-options">
-            <button class="strategy-option" @click="confirmDeleteFolder('move')">
-              <div class="strategy-header">
-                <Icon icon="carbon:folder" width="16" height="16" />
-                <span class="strategy-name">{{ t('folder.deleteMove') }}</span>
-              </div>
-              <span class="strategy-desc">{{ t('folder.deleteMoveDesc') }}</span>
-            </button>
-            <button class="strategy-option strategy-option-danger" @click="confirmDeleteFolder('delete')">
-              <div class="strategy-header">
-                <Icon icon="carbon:trash-can" width="16" height="16" />
-                <span class="strategy-name">{{ t('folder.deleteWithSnippets') }}</span>
-              </div>
-              <span class="strategy-desc">{{ t('folder.deleteWithSnippetsDesc') }}</span>
-            </button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <!-- 空文件夹直接删除 -->
-          <template v-if="deleteFolderDialog.count === 0">
-            <button class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
-            <button class="btn btn-danger btn-sm" @click="confirmDeleteFolder('delete')">{{ t('folder.delete') }}</button>
-          </template>
-          <button v-else class="btn btn-secondary btn-sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 导出范围选择对话框（多选文件夹，每个文件夹各导出一个 JSON） -->
-    <div v-if="exportDialog.visible" class="modal-overlay" @click.self="cancelExport">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <span class="modal-title">{{ t('importExport.exportConfirmTitle') }}</span>
-        </div>
-        <div class="modal-body">
-          <p>{{ t('folder.exportSelectHint') }}</p>
-          <div class="export-options">
-            <!-- 全选/全不选 -->
-            <label class="export-check-item export-check-all">
-              <input type="checkbox" :checked="exportAllSelected" @change="toggleExportAll" />
-              <span class="export-option-label">{{ t('folder.exportAll') }}</span>
-            </label>
-            <!-- 各文件夹勾选项 -->
-            <label
-              v-for="f in folders"
-              :key="f.id"
-              class="export-check-item"
-            >
-              <input
-                type="checkbox"
-                :checked="exportDialog.selectedIds.has(f.id)"
-                @change="toggleExportFolder(f.id)"
-              />
-              <Icon icon="carbon:folder" width="14" height="14" />
-              <span class="export-option-label">{{ folderDisplayName(f) }}</span>
-            </label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="cancelExport">{{ t('form.cancel') }}</button>
-          <button
-            class="btn btn-primary btn-sm"
-            :disabled="exportDialog.selectedIds.size === 0"
-            @click="confirmExport"
-          >{{ t('importExport.exportConfig') }}</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 导入存放方式选择对话框 -->
-    <div v-if="placementDialog.visible" class="modal-overlay" @click.self="cancelPlacement">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <span class="modal-title">{{ t('importExport.placementTitle') }}</span>
-        </div>
-        <div class="modal-body">
-          <p>{{ t('importExport.placementHint', { count: placementDialog.count }) }}</p>
-          <!-- 模式切换：新建文件夹 / 导入到已有文件夹 -->
-          <div class="placement-modes">
-            <label class="placement-mode">
-              <input type="radio" value="new" v-model="placementDialog.mode" />
-              <span>{{ t('importExport.placementNew') }}</span>
-            </label>
-            <label class="placement-mode">
-              <input type="radio" value="existing" v-model="placementDialog.mode" />
-              <span>{{ t('importExport.placementExisting') }}</span>
-            </label>
-          </div>
-
-          <!-- 新建文件夹：输入名称 -->
-          <div v-if="placementDialog.mode === 'new'" class="placement-field">
-            <input
-              v-model="placementDialog.newName"
-              class="form-input"
-              :placeholder="t('folder.namePlaceholder')"
-              maxlength="50"
-              @input="placementDialog.nameError = ''"
-              @keyup.enter="confirmPlacement"
-            />
-            <span v-if="placementDialog.nameError" class="placement-error">
-              {{ t(placementDialog.nameError) }}
-            </span>
-          </div>
-
-          <!-- 导入到已有文件夹：下拉选择 -->
-          <div v-else class="placement-field">
-            <LanguageSelect
-              v-model="placementDialog.targetFolderId"
-              :options="placementFolderOptions"
-              :placeholder="t('folder.namePlaceholder')"
-            />
-            <span class="placement-note">{{ t('importExport.placementExistingNote') }}</span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" @click="cancelPlacement">{{ t('form.cancel') }}</button>
-          <button class="btn btn-primary btn-sm" @click="confirmPlacement">{{ t('importExport.importConfig') }}</button>
-        </div>
-      </div>
-    </div>
+      </template>
+      <template #footer>
+        <button class="btn btn-secondary btn-sm" @click="cancelPlacement">{{ t('form.cancel') }}</button>
+        <button class="btn btn-primary btn-sm" @click="confirmPlacement">{{ t('importExport.importConfig') }}</button>
+      </template>
+    </ConfirmDialog>
 
     <!-- 通用通知条 -->
     <NotificationBar
@@ -1754,35 +1740,7 @@ function handleListScroll() {
   background: rgba-color(#f48771, 0.1);
 }
 
-// ===== 弹窗样式（重复策略弹窗使用） =====
-.modal-overlay {
-  @include modal-overlay;
-}
-
-.modal-dialog {
-  @include modal-dialog;
-}
-
-.modal-header {
-  @include modal-header;
-}
-
-.modal-title {
-  @include modal-title;
-}
-
-.modal-body {
-  @include modal-body;
-}
-
-.modal-footer {
-  @include modal-footer;
-}
-
-.modal-dialog-lg {
-  width: 400px;
-}
-
+// ===== 弹窗内容样式 =====
 .strategy-options {
   @include flex-column;
   gap: $spacing-sm;
