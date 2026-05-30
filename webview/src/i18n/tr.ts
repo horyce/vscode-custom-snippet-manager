@@ -27,7 +27,6 @@ export default {
     descriptionPlaceholder: 'Snippet açıklamasını girin',
     language: 'Dil',
     languagePlaceholder: 'Dil(ler)i seçin — birden fazla seçilebilir',
-    allLanguages: 'Tüm diller',
     save: 'Kaydet',
     cancel: 'İptal',
     nameRequired: 'Ad zorunludur',

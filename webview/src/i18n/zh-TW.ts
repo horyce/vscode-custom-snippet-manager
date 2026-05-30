@@ -27,7 +27,6 @@ export default {
     descriptionPlaceholder: '輸入程式碼片段描述',
     language: '適用語言',
     languagePlaceholder: '選擇適用語言（支援多選）',
-    allLanguages: '所有語言',
     save: '儲存',
     cancel: '取消',
     nameRequired: '請輸入名稱',

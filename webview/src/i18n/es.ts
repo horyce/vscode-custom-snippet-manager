@@ -27,7 +27,6 @@ export default {
     descriptionPlaceholder: 'Ingrese la descripción del snippet',
     language: 'Lenguaje',
     languagePlaceholder: 'Seleccione lenguaje(s) — se permiten varios',
-    allLanguages: 'Todos los lenguajes',
     save: 'Guardar',
     cancel: 'Cancelar',
     nameRequired: 'El nombre es obligatorio',

@@ -27,7 +27,6 @@ export default {
     descriptionPlaceholder: 'Введите описание сниппета',
     language: 'Язык',
     languagePlaceholder: 'Выберите язык(и) — можно несколько',
-    allLanguages: 'Все языки',
     save: 'Сохранить',
     cancel: 'Отмена',
     nameRequired: 'Название обязательно',
