@@ -8,7 +8,6 @@
  * - 与 VS Code 主题融合的样式
  * - Tab 键输入制表符而非切换焦点
  */
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view'
 import { EditorState, type Extension } from '@codemirror/state'
 import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands'

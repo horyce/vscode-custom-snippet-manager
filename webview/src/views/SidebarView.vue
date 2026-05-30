@@ -6,8 +6,6 @@
  * 操作按钮使用原生 HTML 确保在 webview 中点击可靠
  * 删除确认弹窗使用自定义浮层替代 n-modal，避免 teleport 兼容问题
  */
-import { ref, computed, watch, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Fuse from 'fuse.js'
 import type { Snippet, SortOrder, Folder } from '../types'

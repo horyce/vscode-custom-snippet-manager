@@ -5,8 +5,6 @@
  * 支持新建和编辑两种模式，通过后端 setSnippet 消息切换
  * 使用原生 HTML 表单元素替代 Naive UI，确保 webview 中交互可靠
  */
-import { ref, computed, watch, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import type { Snippet, Folder } from '../types'
 import { DEFAULT_FOLDER_ID } from '../types'
