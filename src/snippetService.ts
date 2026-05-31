@@ -686,4 +686,73 @@ export class SnippetService {
       (f) => f.id !== excludeId && f.name.trim().toLowerCase() === lower
     );
   }
+
+  /**
+   * 批量删除文件夹，默认文件夹不可删除
+   * @param folderIds 要删除的文件夹 ID 列表
+   * @param action 片段处理方式：move 移入默认文件夹，delete 连同片段删除
+   * @returns 成功删除的文件夹数量
+   */
+  async batchDeleteFolders(folderIds: string[], action: DeleteFolderAction): Promise<number> {
+    await this.ready();
+    // 过滤掉默认文件夹和不存在的文件夹
+    const validIds = folderIds.filter((id) => id !== DEFAULT_FOLDER_ID && this.folders.some((f) => f.id === id));
+    if (validIds.length === 0) {
+      return 0;
+    }
+
+    if (action === 'move') {
+      // 将所有待删除文件夹的片段并入默认文件夹
+      const defaultList = this.snippetsByFolder.get(DEFAULT_FOLDER_ID) ?? [];
+      for (const folderId of validIds) {
+        const snippets = this.snippetsByFolder.get(folderId) ?? [];
+        defaultList.push(...snippets);
+      }
+      this.snippetsByFolder.set(DEFAULT_FOLDER_ID, defaultList);
+      await this.saveFolderSnippets(DEFAULT_FOLDER_ID);
+    }
+
+    // 从清单和内存缓存移除，删除磁盘文件
+    for (const folderId of validIds) {
+      const idx = this.folders.findIndex((f) => f.id === folderId);
+      if (idx !== -1) {
+        this.folders.splice(idx, 1);
+      }
+      this.snippetsByFolder.delete(folderId);
+      this.dirtyFolders.delete(folderId);
+    }
+
+    await Promise.all([
+      this.saveFoldersMeta(),
+      ...validIds.map((folderId) => this.deleteFolderFile(folderId)),
+    ]);
+    return validIds.length;
+  }
+
+  /**
+   * 更新文件夹排序顺序
+   * @param folderIds 按新顺序排列的文件夹 ID 列表
+   */
+  async reorderFolders(folderIds: string[]): Promise<boolean> {
+    await this.ready();
+    // 校验：folderIds 必须包含所有非默认文件夹（默认文件夹始终排在最前）
+    const nonDefaultIds = this.folders.filter((f) => f.id !== DEFAULT_FOLDER_ID).map((f) => f.id);
+    const sortedInput = [...folderIds].sort();
+    const sortedExisting = [...nonDefaultIds].sort();
+    if (sortedInput.length !== sortedExisting.length || !sortedInput.every((id, i) => id === sortedExisting[i])) {
+      return false;
+    }
+
+    // 默认文件夹 order 为 0，其余从 1 开始按传入顺序赋值
+    for (const f of this.folders) {
+      if (f.id === DEFAULT_FOLDER_ID) {
+        f.order = 0;
+      } else {
+        const idx = folderIds.indexOf(f.id);
+        f.order = idx + 1;
+      }
+    }
+    await this.saveFoldersMeta();
+    return true;
+  }
 }

@@ -14,6 +14,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Folder Export**: Export now lets you select multiple folders, each exported as a separate JSON file
 - **Import Destination**: When importing, you can create a new folder or import into an existing folder
 - **Backup All Data**: Added "Backup All Data" button in settings page to export all snippets as a ZIP file, providing a complete backup before clearing data
+- **Folder Multi-Select**: Added "Manage Folders" mode in sidebar to select multiple folders for batch deletion and reordering, with drag-and-drop support for reordering
 
 ### Changed
 
@@ -30,6 +31,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Language Badge**: Fixed "ALL" label on language badges not being translated when a snippet applies to all languages
 - **Language Selector**: Fixed language selector showing only an icon with no text when "All" is selected, now displays both icon and label
 - **Settings Icons**: Fixed settings page icons (GitHub, Feedback) not displaying due to missing pre-extracted icon data, which caused runtime network requests blocked by CSP
+- **Import Sorting**: Fixed imported snippets having identical creation timestamps, which caused sorting by date to fail; each imported snippet now gets a unique, incrementing creation time
 
 ## [1.2.0] - 2026-05-26
 

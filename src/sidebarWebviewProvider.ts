@@ -183,12 +183,37 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         const { id, action } = msg.payload as { id: string; action: 'move' | 'delete' };
         const ok = await this.snippetService.deleteFolder(id, action === 'delete' ? 'delete' : 'move');
         if (ok) {
-          // 文件夹及片段归属变化，需同时刷新文件夹清单和片段列表
           this.postFoldersList();
           this.postSnippetsList();
           this.showNotification('success', 'folder.deleteSuccess');
         } else {
           this.showNotification('warning', 'folder.deleteFailed');
+        }
+        break;
+      }
+
+      // 前端请求批量删除文件夹
+      case 'batchDeleteFolders': {
+        const { folderIds, action } = msg.payload as { folderIds: string[]; action: 'move' | 'delete' };
+        const count = await this.snippetService.batchDeleteFolders(folderIds, action === 'delete' ? 'delete' : 'move');
+        if (count > 0) {
+          this.postFoldersList();
+          this.postSnippetsList();
+          this.showNotification('success', 'folder.batchDeleteSuccess', { count: String(count) });
+        } else {
+          this.showNotification('warning', 'folder.batchDeleteFailed');
+        }
+        break;
+      }
+
+      // 前端请求文件夹排序
+      case 'reorderFolders': {
+        const folderIds = msg.payload as string[];
+        const ok = await this.snippetService.reorderFolders(folderIds);
+        if (ok) {
+          this.postFoldersList();
+        } else {
+          this.showNotification('warning', 'folder.reorderFailed');
         }
         break;
       }

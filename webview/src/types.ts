@@ -83,6 +83,8 @@ export type MessageType =
   | 'createFolder'
   | 'renameFolder'
   | 'deleteFolder'
+  | 'batchDeleteFolders'
+  | 'reorderFolders'
   | 'error'
 
 /** Webview 发送给扩展的消息格式 */
