@@ -16,6 +16,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Backup All Data**: Added "Backup All Data" button in settings page to export all snippets as a ZIP file, providing a complete backup before clearing data
 - **Folder Multi-Select**: Added "Manage Folders" mode in sidebar to select multiple folders for batch deletion and reordering, with drag-and-drop support for reordering
 - **Keyboard Shortcuts**: Added keyboard shortcuts section in settings page, displaying all available commands and their keybindings (auto-detects macOS/Windows)
+- **12 New Languages**: Added support for **Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / ไทย / Tiếng Việt / Українська / Română / Ελληνικά / हिन्दी** (now 25 languages total)
 
 ### Changed
 

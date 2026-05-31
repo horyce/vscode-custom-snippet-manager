@@ -18,6 +18,18 @@ import pt from './pt'
 import it from './it'
 import pl from './pl'
 import tr from './tr'
+import sv from './sv'
+import da from './da'
+import fi from './fi'
+import nl from './nl'
+import cs from './cs'
+import hu from './hu'
+import th from './th'
+import vi from './vi'
+import uk from './uk'
+import ro from './ro'
+import el from './el'
+import hi from './hi'
 import localesData from '../../../locales.json'
 
 /** 支持的语言列表，用于语言切换下拉菜单（数据来源：locales.json） */
@@ -33,7 +45,7 @@ const i18n = createI18n({
   legacy: false,
   locale: savedLocale,
   fallbackLocale: 'en',
-  messages: { zh, 'zh-TW': zhTW, en, ja, ko, ru, de, fr, es, pt, it, pl, tr },
+  messages: { zh, 'zh-TW': zhTW, en, ja, ko, ru, de, fr, es, pt, it, pl, tr, sv, da, fi, nl, cs, hu, th, vi, uk, ro, el, hi },
 })
 
 export default i18n
