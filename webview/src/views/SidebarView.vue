@@ -773,8 +773,8 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
           <BaseButton variant="secondary" size="sm" :icon="allFoldersSelected ? 'carbon:checkbox-checked' : 'carbon:checkbox'" class="manage-btn" @click="toggleSelectAllFolders">
             {{ allFoldersSelected ? t('folder.deselectAll') : t('folder.selectAll') }}
           </BaseButton>
-          <BaseButton variant="danger" size="sm" icon="carbon:trash-can" class="manage-btn" :disabled="selectedFolderIds.size === 0" @click="handleBatchDeleteFolders">
-            {{ t('folder.batchDelete') }}{{ selectedFolderIds.size > 0 ? ` (${selectedFolderIds.size})` : '' }}
+          <BaseButton variant="danger" size="sm" icon="carbon:trash-can" class="manage-btn manage-btn-delete" :disabled="selectedFolderIds.size === 0" @click="handleBatchDeleteFolders">
+            {{ t('folder.batchDelete') }}<span v-if="selectedFolderIds.size > 0" class="delete-count">{{ selectedFolderIds.size }}</span>
           </BaseButton>
         </template>
       </div>
@@ -1198,6 +1198,7 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
   gap: 6px;
   margin-top: 6px;
   flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .manage-btn {
@@ -1205,6 +1206,27 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
   justify-content: center;
   font-size: $font-size-xs;
   min-width: 0;
+  white-space: nowrap;
+}
+
+// 批量删除按钮计数徽章
+.manage-btn-delete {
+  position: relative;
+}
+
+.delete-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 // ===== 导出选择 =====
