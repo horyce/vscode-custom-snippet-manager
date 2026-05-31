@@ -572,6 +572,159 @@ function handleItemMouseLeave() {
 function handleListScroll() {
   previewCard.value?.hide()
 }
+
+// ===== 文件夹多选模式 =====
+
+// 是否处于多选模式
+const multiSelectMode = ref(false)
+
+// 多选模式下已选中的文件夹 id 集合
+const selectedFolderIds = ref<Set<string>>(new Set())
+
+// 拖拽状态
+const dragState = ref<{
+  draggingId: string | null
+  overId: string | null
+  position: 'before' | 'after' | null
+}>({
+  draggingId: null,
+  overId: null,
+  position: null,
+})
+
+/** 非默认文件夹列表（用于全选/取消全选计算） */
+const nonDefaultFolders = computed(() => folders.value.filter((f) => f.id !== DEFAULT_FOLDER_ID))
+
+/** 是否全选（仅计算非默认文件夹） */
+const allFoldersSelected = computed(
+  () => nonDefaultFolders.value.length > 0 && selectedFolderIds.value.size === nonDefaultFolders.value.length
+)
+
+/** 切换多选模式 */
+function toggleMultiSelectMode() {
+  multiSelectMode.value = !multiSelectMode.value
+  if (!multiSelectMode.value) {
+    // 退出多选模式时清空选中状态和拖拽状态
+    selectedFolderIds.value = new Set()
+    dragState.value = { draggingId: null, overId: null, position: null }
+  }
+}
+
+/** 切换单个文件夹选中状态 */
+function toggleFolderSelect(folderId: string) {
+  const next = new Set(selectedFolderIds.value)
+  if (next.has(folderId)) {
+    next.delete(folderId)
+  } else {
+    next.add(folderId)
+  }
+  selectedFolderIds.value = next
+}
+
+/** 全选/取消全选（仅操作非默认文件夹） */
+function toggleSelectAllFolders() {
+  if (allFoldersSelected.value) {
+    selectedFolderIds.value = new Set()
+  } else {
+    selectedFolderIds.value = new Set(nonDefaultFolders.value.map((f) => f.id))
+  }
+}
+
+/** 批量删除选中文件夹 */
+function handleBatchDeleteFolders() {
+  if (selectedFolderIds.value.size === 0) return
+  const count = selectedFolderIds.value.size
+  // 统计选中文件夹下的片段总数
+  const totalSnippets = snippets.value.filter(
+    (s) => selectedFolderIds.value.has((s.folderId ?? DEFAULT_FOLDER_ID))
+  ).length
+  showConfirm({
+    title: t('folder.batchDeleteTitle'),
+    content: t('folder.batchDeleteContent', { count, snippetCount: totalSnippets }),
+    confirmLabel: t('folder.batchDeleteConfirm'),
+    cancelLabel: t('folder.batchDeleteCancel'),
+    danger: true,
+    onConfirm: () => {
+      openBatchDeleteFolderDialog()
+    },
+  })
+}
+
+// 批量删除文件夹对话框状态
+const batchDeleteDialog = ref<{ visible: boolean }>({ visible: false })
+
+/** 打开批量删除文件夹对话框（选择片段处理方式） */
+function openBatchDeleteFolderDialog() {
+  batchDeleteDialog.value.visible = true
+}
+
+/** 确认批量删除，action 决定片段处理方式 */
+function confirmBatchDeleteFolder(action: 'move' | 'delete') {
+  const folderIds = Array.from(selectedFolderIds.value)
+  postToExt('batchDeleteFolders', { folderIds, action })
+  batchDeleteDialog.value.visible = false
+  // 退出多选模式
+  multiSelectMode.value = false
+  selectedFolderIds.value = new Set()
+}
+
+/** 取消批量删除 */
+function cancelBatchDeleteFolder() {
+  batchDeleteDialog.value.visible = false
+}
+
+/** 拖拽开始 */
+function handleFolderDragStart(_event: DragEvent, folderId: string) {
+  dragState.value.draggingId = folderId
+}
+
+/** 拖拽结束 */
+function handleFolderDragEnd() {
+  dragState.value = { draggingId: null, overId: null, position: null }
+}
+
+/** 拖拽经过，计算放置位置 */
+function handleFolderDragOver(event: DragEvent, folderId: string) {
+  if (folderId === DEFAULT_FOLDER_ID || folderId === dragState.value.draggingId) return
+  event.preventDefault()
+  dragState.value.overId = folderId
+  // 根据鼠标位置判断放置在目标前还是后
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const midY = rect.top + rect.height / 2
+  dragState.value.position = event.clientY < midY ? 'before' : 'after'
+}
+
+/** 拖拽离开 */
+function handleFolderDragLeave() {
+  dragState.value.overId = null
+  dragState.value.position = null
+}
+
+/** 放置，执行排序 */
+function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
+  const dragId = dragState.value.draggingId
+  if (!dragId || dragId === targetFolderId || targetFolderId === DEFAULT_FOLDER_ID) {
+    handleFolderDragEnd()
+    return
+  }
+
+  // 获取非默认文件夹的当前顺序
+  const currentOrder = nonDefaultFolders.value.map((f) => f.id)
+  // 移除拖拽项
+  const withoutDrag = currentOrder.filter((id) => id !== dragId)
+  // 在目标位置插入
+  const targetIdx = withoutDrag.indexOf(targetFolderId)
+  if (targetIdx === -1) {
+    handleFolderDragEnd()
+    return
+  }
+  const insertIdx = dragState.value.position === 'after' ? targetIdx + 1 : targetIdx
+  withoutDrag.splice(insertIdx, 0, dragId)
+
+  // 通知后端更新排序
+  postToExt('reorderFolders', withoutDrag)
+  handleFolderDragEnd()
+}
 </script>
 
 <template>
@@ -605,6 +758,26 @@ function handleListScroll() {
       </div>
       <!-- 新建文件夹按钮 -->
       <BaseButton variant="secondary" size="sm" icon="carbon:folder-add" class="new-folder-btn" @click="openCreateFolder">{{ t('folder.create') }}</BaseButton>
+      <!-- 文件夹多选模式按钮 -->
+      <div class="folder-manage-row">
+        <BaseButton
+          :variant="multiSelectMode ? 'primary' : 'secondary'"
+          size="sm"
+          :icon="multiSelectMode ? 'carbon:checkbox-checked' : 'carbon:checkbox'"
+          class="manage-btn"
+          @click="toggleMultiSelectMode"
+        >
+          {{ multiSelectMode ? t('folder.exitManage') : t('folder.manage') }}
+        </BaseButton>
+        <template v-if="multiSelectMode">
+          <BaseButton variant="secondary" size="sm" :icon="allFoldersSelected ? 'carbon:checkbox-checked' : 'carbon:checkbox'" class="manage-btn" @click="toggleSelectAllFolders">
+            {{ allFoldersSelected ? t('folder.deselectAll') : t('folder.selectAll') }}
+          </BaseButton>
+          <BaseButton variant="danger" size="sm" icon="carbon:trash-can" class="manage-btn" :disabled="selectedFolderIds.size === 0" @click="handleBatchDeleteFolders">
+            {{ t('folder.batchDelete') }}{{ selectedFolderIds.size > 0 ? ` (${selectedFolderIds.size})` : '' }}
+          </BaseButton>
+        </template>
+      </div>
     </div>
 
     <!-- 搜索框 -->
@@ -648,6 +821,11 @@ function handleListScroll() {
           :is-collapsed="collapsedFolders.has(group.folder.id)"
           :default-folder-id="DEFAULT_FOLDER_ID"
           :folder-display-name="folderDisplayName(group.folder)"
+          :multi-select-mode="multiSelectMode"
+          :selected="selectedFolderIds.has(group.folder.id)"
+          :dragging="dragState.draggingId === group.folder.id"
+          :drag-over="dragState.overId === group.folder.id"
+          :drag-position="dragState.overId === group.folder.id ? dragState.position ?? undefined : undefined"
           @toggle="toggleFolder"
           @rename="openRenameFolder"
           @delete-folder="openDeleteFolder"
@@ -655,6 +833,12 @@ function handleListScroll() {
           @delete-snippet="handleDelete"
           @snippet-mouseenter="handleItemMouseEnter"
           @snippet-mouseleave="handleItemMouseLeave"
+          @select="toggleFolderSelect"
+          @dragstart="handleFolderDragStart"
+          @dragend="handleFolderDragEnd"
+          @dragover="handleFolderDragOver"
+          @dragleave="handleFolderDragLeave"
+          @drop="handleFolderDrop"
         />
       </div>
     </div>
@@ -732,6 +916,25 @@ function handleListScroll() {
           <BaseButton variant="danger" size="sm" @click="confirmDeleteFolder('delete')">{{ t('folder.delete') }}</BaseButton>
         </template>
         <BaseButton v-else variant="secondary" size="sm" @click="cancelDeleteFolder">{{ t('form.cancel') }}</BaseButton>
+      </template>
+    </ConfirmDialog>
+
+    <!-- 批量删除文件夹对话框：选择片段处理方式 -->
+    <ConfirmDialog
+      :visible="batchDeleteDialog.visible"
+      :title="t('folder.batchDeleteTitle')"
+      large
+      @cancel="cancelBatchDeleteFolder"
+    >
+      <template #body>
+        <p>{{ t('folder.batchDeleteStrategyHint') }}</p>
+        <div class="strategy-options">
+          <StrategyOption icon="carbon:folder" :name="t('folder.deleteMove')" :desc="t('folder.batchDeleteMoveDesc')" @click="confirmBatchDeleteFolder('move')" />
+          <StrategyOption icon="carbon:trash-can" :name="t('folder.deleteWithSnippets')" :desc="t('folder.batchDeleteWithSnippetsDesc')" danger @click="confirmBatchDeleteFolder('delete')" />
+        </div>
+      </template>
+      <template #footer>
+        <BaseButton variant="secondary" size="sm" @click="cancelBatchDeleteFolder">{{ t('form.cancel') }}</BaseButton>
       </template>
     </ConfirmDialog>
 
@@ -987,6 +1190,21 @@ function handleListScroll() {
   width: 100%;
   justify-content: center;
   margin-top: 6px;
+}
+
+// ===== 文件夹管理行 =====
+.folder-manage-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.manage-btn {
+  flex: 1;
+  justify-content: center;
+  font-size: $font-size-xs;
+  min-width: 0;
 }
 
 // ===== 导出选择 =====
