@@ -6,7 +6,7 @@
 
 [English Changelog](./CHANGELOG.md)
 
-## [未发布]
+## [1.3.0] - 2026-06-03
 
 ### 新增
 

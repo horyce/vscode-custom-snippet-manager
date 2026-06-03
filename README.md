@@ -1,17 +1,23 @@
-# Custom Snippet Manager
-
-[![VS Code](https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge)](https://marketplace.visualstudio.com/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://github.com/horyce/vscode-custom-snippet-manager/blob/main/LICENSE)
-
-🚀 A powerful snippet manager for VS Code with a modern UI, smart autocomplete, and multi-language support.
-✨ Create, organize, and instantly reuse your code snippets — all in one place.
-
----
-
-## 🌐 Language
-
-[![English](https://img.shields.io/badge/English-README-blue?style=for-the-badge)](./README.md)
-[![中文](https://img.shields.io/badge/中文-说明-red?style=for-the-badge)](./README.zh-CN.md)
+<div align="center">
+  <img src="./resources/logo.png" alt="Custom Snippet Manager" width="128" />
+  <h1>Custom Snippet Manager</h1>
+  <p>
+    <a href="https://marketplace.visualstudio.com/items?itemName=Horyce.custom-snippet-manager">
+      <img src="https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge" alt="VS Code" />
+    </a>
+    <a href="https://github.com/horyce/vscode-custom-snippet-manager/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License" />
+    </a>
+    <a href="./README.md">
+      <img src="https://img.shields.io/badge/English-README-blue?style=for-the-badge" alt="English" />
+    </a>
+    <a href="./README.zh-CN.md">
+      <img src="https://img.shields.io/badge/中文-说明-red?style=for-the-badge" alt="中文" />
+    </a>
+  </p>
+  <p>🚀 A powerful snippet manager for VS Code with a modern UI, smart autocomplete, and multi-language support.</p>
+  <p>✨ Create, organize, and instantly reuse your code snippets — all in one place.</p>
+</div>
 
 ---
 
@@ -39,15 +45,25 @@
 
 ### 🌐 Multi-language Support
 
-![language](./resources/lang.png)
+![language](./resources/SwitchLanguage.gif)
 
-* Supports 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe
+* Supports 25 languages: 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / ไทย / Tiếng Việt / Українська / Română / Ελληνικά / हिन्दी
 * Easily switch between languages
 * Language preference is saved automatically
 
+### 📂 Folder Management
+
+![newfolder](./resources/NewFolder.gif)
+
+* Organize snippets into folders for better categorization
+* Drag-and-drop to reorder folders
+* Multi-select mode for batch folder deletion
+* Default folder automatically collects uncategorized snippets
+
 ### 💼 Import & Export
 
-* Export snippets as JSON with metadata
+* Export snippets by folder as JSON with metadata
+* One-click backup all data as a ZIP file
 * Secure import with validation
 * Handle duplicates with:
 
@@ -63,7 +79,7 @@
 
 ---
 
-## 📖 Usage
+## 📖 Usage  `The following demonstration uses the old interface.`
 
 ### ➕ Create Snippets
 
@@ -113,7 +129,7 @@ console.log('$1', $2);$0
 | Open Snippet Library    | —                              | Open sidebar panel           |
 | Insert Snippet          | Ctrl+Alt+I / Cmd+Alt+I         | Insert snippet via QuickPick |
 | Trigger Completion      | Ctrl+Alt+Space / Cmd+Alt+Space | Trigger autocomplete         |
-| Save to Snippet Library | —                              | Save selected code           |
+| Save to Snippet Library | Context Menu                    | Save selected code           |
 
 ---
 

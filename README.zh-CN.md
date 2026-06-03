@@ -1,17 +1,23 @@
-# Custom Snippet Manager - 自定义片段管理器
-
-[![VS Code](https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge)](https://marketplace.visualstudio.com/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://github.com/horyce/vscode-custom-snippet-manager/blob/main/LICENSE)
-
-🚀 一个强大的 VS Code 代码片段管理插件，提供现代化界面、智能补全和多语言支持。
-✨ 让你轻松创建、管理并快速复用代码片段，大幅提升编码效率。
-
----
-
-## 🌐 语言
-
-[![English](https://img.shields.io/badge/English-README-blue?style=for-the-badge)](./README.md)
-[![中文](https://img.shields.io/badge/中文-说明-red?style=for-the-badge)](./README.zh-CN.md)
+<div align="center">
+  <img src="./resources/logo.png" alt="Custom Snippet Manager" width="128" />
+  <h1>Custom Snippet Manager - 自定义片段管理器</h1>
+  <p>
+    <a href="https://marketplace.visualstudio.com/items?itemName=Horyce.custom-snippet-manager">
+      <img src="https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge" alt="VS Code" />
+    </a>
+    <a href="https://github.com/horyce/vscode-custom-snippet-manager/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License" />
+    </a>
+    <a href="./README.md">
+      <img src="https://img.shields.io/badge/English-README-blue?style=for-the-badge" alt="English" />
+    </a>
+    <a href="./README.zh-CN.md">
+      <img src="https://img.shields.io/badge/中文-说明-red?style=for-the-badge" alt="中文" />
+    </a>
+  </p>
+  <p>🚀 一个强大的 VS Code 代码片段管理插件，提供现代化界面、智能补全和多语言支持。</p>
+  <p>✨ 让你轻松创建、管理并快速复用代码片段，大幅提升编码效率。</p>
+</div>
 
 ---
 
@@ -39,16 +45,25 @@
 
 ### 🌐 多语言支持
 
-![language](./resources/lang.png)
+![language](./resources/SwitchLanguage.gif)
 
-* 支持 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe
-
+* 支持 25 种语言：简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / ไทย / Tiếng Việt / Українська / Română / Ελληνικά / हिन्दी
 * 一键切换语言
 * 自动记住用户语言偏好
 
+### 📂 文件夹管理
+
+![newfolder](./resources/NewFolder.gif)
+
+* 按文件夹组织片段，分类更清晰
+* 支持拖拽排序，自由调整文件夹顺序
+* 多选模式，批量删除文件夹
+* 默认文件夹自动收纳未分类片段
+
 ### 💼 导入与导出
 
-* 一键导出为 JSON（包含元数据）
+* 按文件夹导出为 JSON（包含元数据）
+* 一键备份全部数据为 ZIP 文件
 * 安全导入并自动校验
 * 重复片段处理方式：
 
@@ -64,17 +79,17 @@
 
 ---
 
-## 📖 使用方法
+## 📖 使用方法  `以下演示使用的是旧版界面`
 
 ### ➕ 创建代码片段
 
 **方式一：右键创建**
 
-![右键创建](./resources/savecodecn1.gif)
+![右键创建](./resources/savecode1.gif)
 
 **方式二：界面创建**
 
-![UI创建](./resources/savecodecn2.gif)
+![UI创建](./resources/savecode2.gif)
 
 ---
 
@@ -82,15 +97,15 @@
 
 **自动补全**
 
-![自动补全](./resources/usecodecn1.gif)
+![自动补全](./resources/usecode1.gif)
 
 **右键菜单**
 
-![右键菜单](./resources/usecodecn2.gif)
+![右键菜单](./resources/usecode2.gif)
 
 **快速选择**
 
-![快速选择](./resources/usecodecn3.gif)
+![快速选择](./resources/usecode3.gif)
 
 ---
 
@@ -114,7 +129,7 @@ console.log('$1', $2);$0
 | 打开片段库  | —                              | 打开侧边栏    |
 | 插入片段   | Ctrl+Alt+I / Cmd+Alt+I         | 快速插入片段   |
 | 触发补全   | Ctrl+Alt+Space / Cmd+Alt+Space | 触发代码补全   |
-| 保存到片段库 | —                              | 保存选中代码   |
+| 保存到片段库 | 右键菜单                          | 保存选中代码   |
 
 ---
 
