@@ -157,7 +157,7 @@
   border: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.1));
   border-radius: $radius-lg;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
+  // 不设 overflow:hidden，允许下拉菜单等弹出内容超出弹窗边界
 }
 
 @mixin modal-header {
