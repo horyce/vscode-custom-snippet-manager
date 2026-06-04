@@ -12,6 +12,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - **Checkbox & Radio Style**: Replaced native checkboxes and radio buttons with custom BaseCheckbox and BaseRadio components, providing a consistent look that matches the plugin's design theme
 
+### Fixed
+
+- **Folder Dropdown in Import Dialog**: Fixed the issue where the folder selection drop-down menu was cut off by the dialog boundary
+
 ## [1.3.0] - 2026-06-03
 
 ### Added
