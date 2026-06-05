@@ -68,7 +68,8 @@ const emit = defineEmits<{
 }
 
 .modal-body {
-  padding: $spacing-md 18px 18px;
+  @include modal-body;
+  // scoped 模式下需要 :deep 穿透 slot 中的 p 标签
   :deep(p) {
     margin: 0;
     font-size: $font-size-base;
