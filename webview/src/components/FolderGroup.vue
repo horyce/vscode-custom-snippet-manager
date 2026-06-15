@@ -51,6 +51,9 @@ const emit = defineEmits<{
 /** 文件夹头部元素引用，用于设置自定义拖拽图像 */
 const folderHeaderRef = ref<HTMLElement | null>(null)
 
+/** 拖拽图标元素引用，用于计算拖拽偏移 */
+const dragHandleRef = ref<HTMLElement | null>(null)
+
 /** 是否为默认文件夹 */
 const isDefault = computed(() => props.folder.id === props.defaultFolderId)
 
@@ -70,9 +73,14 @@ function handleDragStart(event: DragEvent) {
     event.preventDefault()
     return
   }
-  // 使用整个文件夹头部作为拖拽图像，而非仅显示小图标
-  if (event.dataTransfer && folderHeaderRef.value) {
-    event.dataTransfer.setDragImage(folderHeaderRef.value, 16, 12)
+  // 使用整个文件夹头部作为拖拽图像，偏移量基于拖拽图标在 header 中的位置
+  if (event.dataTransfer && folderHeaderRef.value && dragHandleRef.value) {
+    const headerRect = folderHeaderRef.value.getBoundingClientRect()
+    const handleRect = dragHandleRef.value.getBoundingClientRect()
+    // 鼠标位置相对于拖拽图标中心的偏移
+    const offsetX = handleRect.left - headerRect.left + handleRect.width / 2
+    const offsetY = handleRect.top - headerRect.top + handleRect.height / 2
+    event.dataTransfer.setDragImage(folderHeaderRef.value, offsetX, offsetY)
   }
   emit('dragstart', event, props.folder.id)
 }
@@ -132,7 +140,7 @@ function handleDrop(event: DragEvent) {
       <template v-if="multiSelectMode">
         <!-- 多选模式下：拖拽图标（原编辑位置）+ 复选框（原删除位置） -->
         <div v-if="!isDefault" class="folder-actions folder-actions-visible">
-          <div class="folder-drag-handle" draggable="true" @click.stop @dragstart="handleDragStart" @dragend="emit('dragend')">
+          <div ref="dragHandleRef" class="folder-drag-handle" draggable="true" @click.stop @dragstart="handleDragStart" @dragend="emit('dragend')">
             <Icon icon="carbon:draggable" width="14" height="14" />
           </div>
           <label class="folder-checkbox" @click.stop="handleCheckboxClick">
