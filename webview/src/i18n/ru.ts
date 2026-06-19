@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'при выделении текста',
     contextMenu: 'Контекстное меню',
     commandPalette: 'Палитра команд',
+    language: 'Язык',
+    localeAuto: 'Авто',
+    localeManual: 'Вручную',
+    resetToAuto: 'Сбросить на авто',
   },
   clearAll: {
     title: 'Подтверждение очистки',

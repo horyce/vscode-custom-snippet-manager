@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'när text är markerad',
     contextMenu: 'Snabbmeny',
     commandPalette: 'Kommandopalett',
+    language: 'Språk',
+    localeAuto: 'Auto',
+    localeManual: 'Manuell',
+    resetToAuto: 'Återställ till auto',
   },
   clearAll: {
     title: 'Bekräfta datarensning',

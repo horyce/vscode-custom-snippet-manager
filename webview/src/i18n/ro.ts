@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'când textul este selectat',
     contextMenu: 'Meniu contextual',
     commandPalette: 'Paleta de comenzi',
+    language: 'Limbă',
+    localeAuto: 'Auto',
+    localeManual: 'Manual',
+    resetToAuto: 'Resetează la auto',
   },
   clearAll: {
     title: 'Confirmați ștergerea datelor',

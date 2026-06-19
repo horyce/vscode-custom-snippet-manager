@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'metin seçildiğinde',
     contextMenu: 'Bağlam menüsü',
     commandPalette: 'Komut paleti',
+    language: 'Dil',
+    localeAuto: 'Otomatik',
+    localeManual: 'Manuel',
+    resetToAuto: 'Otomatiğe sıfırla',
   },
   clearAll: {
     title: 'Veri temizleme onayı',

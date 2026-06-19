@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'khi văn bản được chọn',
     contextMenu: 'Menu ngữ cảnh',
     commandPalette: 'Bảng lệnh',
+    language: 'Ngôn ngữ',
+    localeAuto: 'Tự động',
+    localeManual: 'Thủ công',
+    resetToAuto: 'Đặt lại về tự động',
   },
   clearAll: {
     title: 'Xác nhận xóa dữ liệu',

@@ -163,6 +163,10 @@ export default {
     whenTextSelected: '選取文字時',
     contextMenu: '右鍵選單',
     commandPalette: '命令面板',
+    language: '語言',
+    localeAuto: '自動偵測',
+    localeManual: '手動設定',
+    resetToAuto: '重設為自動偵測',
   },
   clearAll: {
     title: '清空資料確認',

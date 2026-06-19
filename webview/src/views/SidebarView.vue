@@ -74,6 +74,9 @@ const currentSortLabel = computed(() => {
   return sortOrder.value === 'desc' ? t('sort.newestFirst') : t('sort.oldestFirst')
 })
 
+// 语言来源：'auto' 跟随 VS Code 语言，'manual' 手动设置
+const localeSource = ref<'auto' | 'manual'>(window.__LOCALE_SOURCE || 'auto')
+
 // 语言切换下拉选项，适配 LanguageSelect 组件格式
 const localeSelectOptions = computed(() =>
   SUPPORTED_LOCALES.map((l) => ({
@@ -83,10 +86,16 @@ const localeSelectOptions = computed(() =>
   }))
 )
 
-/** 切换语言，同时通知扩展持久化保存 */
+/** 切换语言，标记为手动模式并通知后端持久化 */
 function changeLocale(val: string) {
   locale.value = val
+  localeSource.value = 'manual'
   postToExt('changeLocale', val)
+}
+
+/** 重置语言为自动检测模式 */
+function resetLocaleToAuto() {
+  postToExt('resetLocaleToAuto', null)
 }
 
 /** 切换排序方向（正序/倒序），并通知后端持久化保存 */
@@ -304,6 +313,15 @@ onExtMessage('foldersList', (payload) => {
 onExtMessage('error', (payload) => {
   const data = payload as { errorKey: string; errorParams?: Record<string, string> }
   showError(t(data.errorKey, data.errorParams ?? {}))
+})
+
+// 监听后端语言变更通知（重置为自动模式时触发）
+onExtMessage('localeChanged', (payload) => {
+  if (typeof payload === 'object' && payload !== null && 'locale' in payload) {
+    const data = payload as { locale: string; source: 'auto' | 'manual' }
+    locale.value = data.locale
+    localeSource.value = data.source
+  }
 })
 
 // 导出文件夹选择对话框状态，selectedIds 为已勾选的文件夹 id 集合
@@ -732,7 +750,7 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
 <template>
   <div class="sidebar-view">
     <!-- 设置页面视图 -->
-    <SettingsView v-if="currentView === 'settings'" @back="currentView = 'list'" />
+    <SettingsView v-if="currentView === 'settings'" :locale-source="localeSource" :current-locale="locale" @back="currentView = 'list'" @change-locale="changeLocale" @reset-locale-to-auto="resetLocaleToAuto" />
     <!-- 片段列表视图 -->
     <template v-else>
     <!-- 顶部标题栏：图标 + 标题 + 语言切换 -->

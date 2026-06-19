@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'gdy tekst jest zaznaczony',
     contextMenu: 'Menu kontekstowe',
     commandPalette: 'Paleta poleceń',
+    language: 'Język',
+    localeAuto: 'Auto',
+    localeManual: 'Ręcznie',
+    resetToAuto: 'Resetuj na auto',
   },
   clearAll: {
     title: 'Potwierdź czyszczenie',

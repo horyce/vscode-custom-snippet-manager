@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'जब पाठ चुना गया हो',
     contextMenu: 'संदर्भ मेनू',
     commandPalette: 'कमांड पैलेट',
+    language: 'मान्यक्षर',
+    localeAuto: 'स्ट्रिकर्त अपने लाइग्न विधित करने के लिए',
+    localeManual: 'मान्यक्षर निम्नित करने के लिए',
+    resetToAuto: 'स्ट्रिकर्त अपने लाइग्न विधित करने के लिए',
   },
   clearAll: {
     title: 'डेटा मिटाने की पुष्टि करें',

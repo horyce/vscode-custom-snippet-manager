@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { SnippetService, SnippetData } from './snippetService';
+import localesData from '../locales.json';
 
 /** Webview 发送的消息格式 */
 interface WebviewMessage {
@@ -220,7 +221,8 @@ export class WebviewPanel {
 
     // 注入视图模式、语言偏好、文件夹清单和 VS Code API
     // 前端根据 __VIEW_MODE 决定渲染侧边栏还是编辑器
-    const locale = this.context.globalState.get<string>('locale', 'zh');
+    // 使用 resolveLocale 确保自动模式下也能获取正确的语言
+    const locale = this.resolveLocale();
     // 文件夹清单注入，供编辑器"所属文件夹"下拉框渲染
     const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
     html = html.replace(
@@ -271,6 +273,27 @@ export class WebviewPanel {
   <p>${message}</p>
 </body>
 </html>`;
+  }
+
+  /**
+   * 解析当前生效的语言偏好
+   * auto 模式：根据 vscode.env.language 映射到支持的语言列表
+   * manual 模式：直接返回手动设置的 locale 值
+   */
+  private resolveLocale(): string {
+    const source = this.context.globalState.get<'auto' | 'manual'>('localeSource', 'auto');
+    if (source === 'manual') {
+      return this.context.globalState.get<string>('locale', 'zh');
+    }
+    // auto 模式：从 VS Code 语言设置映射
+    const validLocales = localesData.locales.map(l => l.value);
+    const lower = vscode.env.language.toLowerCase();
+    const exact = validLocales.find(l => l.toLowerCase() === lower);
+    if (exact) { return exact; }
+    const prefix = lower.split('-')[0];
+    const prefixMatch = validLocales.find(l => l.toLowerCase() === prefix);
+    if (prefixMatch) { return prefixMatch; }
+    return 'en';
   }
 
   /** 释放面板及相关资源 */

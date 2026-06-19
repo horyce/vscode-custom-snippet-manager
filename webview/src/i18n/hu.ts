@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'amikor szöveg ki van jelölve',
     contextMenu: 'Helyi menü',
     commandPalette: 'Parancspaletta',
+    language: 'Nyelv',
+    localeAuto: 'Auto',
+    localeManual: 'Kézi',
+    resetToAuto: 'Visszaállítás automatára',
   },
   clearAll: {
     title: 'Adattörlés megerősítése',

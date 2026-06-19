@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'quando há texto selecionado',
     contextMenu: 'Menu de contexto',
     commandPalette: 'Paleta de comandos',
+    language: 'Idioma',
+    localeAuto: 'Auto',
+    localeManual: 'Manual',
+    resetToAuto: 'Redefinir para auto',
   },
   clearAll: {
     title: 'Confirmar limpeza',

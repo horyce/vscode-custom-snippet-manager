@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'เมื่อมีข้อความถูกเลือก',
     contextMenu: 'เมนูคลิกขวา',
     commandPalette: 'พาเล็ตคำสั่ง',
+    language: 'ภาษา',
+    localeAuto: 'อัตโนมัติ',
+    localeManual: 'กำหนดเอง',
+    resetToAuto: 'รีเซ็ตเป็นอัตโนมัติ',
   },
   clearAll: {
     title: 'ยืนยันการล้างข้อมูล',

@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'テキスト選択時',
     contextMenu: 'コンテキストメニュー',
     commandPalette: 'コマンドパレット',
+    language: '言語',
+    localeAuto: '自動検出',
+    localeManual: '手動設定',
+    resetToAuto: '自動検出にリセット',
   },
   clearAll: {
     title: 'データ消去の確認',

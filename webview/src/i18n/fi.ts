@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'kun teksti on valittuna',
     contextMenu: 'Pikavalikko',
     commandPalette: 'Komentopaletti',
+    language: 'Kieli',
+    localeAuto: 'Auto',
+    localeManual: 'Manuaalinen',
+    resetToAuto: 'Palauta automaattiseksi',
   },
   clearAll: {
     title: 'Vahvista datan tyhjennys',

@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'lorsque du texte est sélectionné',
     contextMenu: 'Menu contextuel',
     commandPalette: 'Palette de commandes',
+    language: 'Langue',
+    localeAuto: 'Auto',
+    localeManual: 'Manuel',
+    resetToAuto: 'Réinitialiser en auto',
   },
   clearAll: {
     title: 'Confirmer la suppression',

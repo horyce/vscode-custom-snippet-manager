@@ -163,6 +163,10 @@ export default {
     whenTextSelected: '텍스트 선택 시',
     contextMenu: '컨텍스트 메뉴',
     commandPalette: '명령 팔레트',
+    language: '언어',
+    localeAuto: '자동 감지',
+    localeManual: '수동 설정',
+    resetToAuto: '자동 감지로 재설정',
   },
   clearAll: {
     title: '데이터 삭제 확인',

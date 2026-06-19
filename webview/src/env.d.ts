@@ -8,7 +8,7 @@ interface VscodeApi {
 }
 
 /** 支持的语言标识符 */
-type AppLocale = 'zh' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'ru' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'pl' | 'tr'
+type AppLocale = 'zh' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'ru' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'pl' | 'tr' | 'sv' | 'da' | 'fi' | 'nl' | 'cs' | 'hu' | 'th' | 'vi' | 'uk' | 'ro' | 'el' | 'hi'
 
 declare global {
   interface Window {
@@ -18,6 +18,8 @@ declare global {
     __VIEW_MODE?: 'sidebar' | 'editor'
     /** 语言偏好，由后端从 globalState 注入，确保侧边栏和编辑器语言同步 */
     __LOCALE?: AppLocale
+    /** 语言来源，'auto' 跟随 VS Code 语言，'manual' 手动设置 */
+    __LOCALE_SOURCE?: 'auto' | 'manual'
     /** 排序偏好，由后端从 globalState 注入，'desc' 为由新至旧，'asc' 为由旧至新 */
     __SORT_ORDER?: 'desc' | 'asc'
     /** 插件版本号，由后端从 package.json 注入 */

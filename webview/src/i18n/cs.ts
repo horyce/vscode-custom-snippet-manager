@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'když je text vybrán',
     contextMenu: 'Kontextová nabídka',
     commandPalette: 'Paleta příkazů',
+    language: 'Jazyk',
+    localeAuto: 'Auto',
+    localeManual: 'Ručně',
+    resetToAuto: 'Resetovat na auto',
   },
   clearAll: {
     title: 'Potvrdit vymazání dat',

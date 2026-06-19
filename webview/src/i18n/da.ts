@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'når tekst er markeret',
     contextMenu: 'Højrekliksmenu',
     commandPalette: 'Kommandopalet',
+    language: 'Sprog',
+    localeAuto: 'Auto',
+    localeManual: 'Manuel',
+    resetToAuto: 'Nulstil til auto',
   },
   clearAll: {
     title: 'Bekræft datarensning',

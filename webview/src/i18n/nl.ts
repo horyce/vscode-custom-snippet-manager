@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'wanneer tekst is geselecteerd',
     contextMenu: 'Contextmenu',
     commandPalette: 'Opdrachtpalet',
+    language: 'Taal',
+    localeAuto: 'Auto',
+    localeManual: 'Handmatig',
+    resetToAuto: 'Reset naar auto',
   },
   clearAll: {
     title: 'Gegevens wissen bevestigen',

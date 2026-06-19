@@ -163,6 +163,10 @@ export default {
     whenTextSelected: '选中文本时',
     contextMenu: '右键菜单',
     commandPalette: '命令面板',
+    language: '语言',
+    localeAuto: '自动检测',
+    localeManual: '手动设置',
+    resetToAuto: '重置为自动检测',
   },
   clearAll: {
     title: '清空数据确认',

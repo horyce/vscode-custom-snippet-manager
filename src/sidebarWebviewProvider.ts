@@ -79,14 +79,60 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  /** 获取当前保存的语言偏好，默认中文 */
+  /** 获取语言来源：'auto' 跟随 VS Code 语言，'manual' 手动设置 */
+  public getLocaleSource(): 'auto' | 'manual' {
+    return this.context.globalState.get<'auto' | 'manual'>('localeSource', 'auto');
+  }
+
+  /**
+   * 解析当前生效的语言偏好
+   * auto 模式：根据 vscode.env.language 映射到支持的语言列表
+   * manual 模式：直接返回手动设置的 locale 值
+   */
+  public resolveLocale(): string {
+    const source = this.getLocaleSource();
+    if (source === 'manual') {
+      return this.context.globalState.get<string>('locale', 'zh');
+    }
+    // auto 模式：从 VS Code 语言设置映射
+    return this.mapVscodeLocale(vscode.env.language);
+  }
+
+  /** 获取当前保存的语言偏好（兼容旧调用） */
   public getLocale(): string {
-    return this.context.globalState.get<string>('locale', 'zh');
+    return this.resolveLocale();
   }
 
   /** 保存语言偏好到 globalState */
   private setLocale(locale: string): void {
     this.context.globalState.update('locale', locale);
+  }
+
+  /** 保存语言来源到 globalState */
+  private setLocaleSource(source: 'auto' | 'manual'): void {
+    this.context.globalState.update('localeSource', source);
+  }
+
+  /**
+   * 将 VS Code 语言标识映射到插件支持的语言
+   * 使用大小写不敏感匹配，未匹配时回退到英文
+   */
+  private mapVscodeLocale(vscodeLang: string): string {
+    const validLocales = localesData.locales.map(l => l.value);
+    const lower = vscodeLang.toLowerCase();
+    // 精确匹配（忽略大小写）
+    const exact = validLocales.find(l => l.toLowerCase() === lower);
+    if (exact) {
+      return exact;
+    }
+    // 前缀匹配：如 'zh-cn' 匹配 'zh'，'pt-br' 匹配 'pt'
+    const prefix = lower.split('-')[0];
+    const prefixMatch = validLocales.find(l => l.toLowerCase() === prefix);
+    if (prefixMatch) {
+      return prefixMatch;
+    }
+    // 未匹配时回退到英文
+    return 'en';
   }
 
   /** 获取排序偏好，默认倒序（由新至旧） */
@@ -244,16 +290,26 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
         break;
       }
 
-      // 前端切换语言，持久化保存到 globalState
+      // 前端手动切换语言，标记为手动模式并持久化
       case 'changeLocale': {
         const locale = msg.payload as string;
-        // 从共享的 locales.json 获取有效语言列表，避免与前端重复维护
         const validLocales = localesData.locales.map(l => l.value);
         if (validLocales.includes(locale)) {
           this.setLocale(locale);
+          this.setLocaleSource('manual');
           // 同步语言设置到编辑器面板
           WebviewPanel.currentPanel?.postToWebview('localeChanged', locale);
         }
+        break;
+      }
+
+      // 前端重置语言为自动检测模式
+      case 'resetLocaleToAuto': {
+        this.setLocaleSource('auto');
+        const resolved = this.resolveLocale();
+        // 同步解析后的语言到前端和编辑器面板
+        this.postToView('localeChanged', { locale: resolved, source: 'auto' });
+        WebviewPanel.currentPanel?.postToWebview('localeChanged', resolved);
         break;
       }
 
@@ -505,8 +561,9 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
 
     let html = await fs.promises.readFile(htmlPath, 'utf-8');
 
-    // 注入视图模式、语言偏好、排序偏好、版本号、存储路径、文件夹清单和 VS Code API
+    // 注入视图模式、语言偏好、语言来源、排序偏好、版本号、存储路径、文件夹清单和 VS Code API
     const locale = this.getLocale();
+    const localeSource = this.getLocaleSource();
     const sortOrder = this.getSortOrder();
     const version = this.appVersion;
     const storagePath = this.snippetService.getStoragePath();
@@ -514,7 +571,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
     html = html.replace(
       '<head>',
-      `<head><script>window.__VIEW_MODE = 'sidebar'; window.__LOCALE = '${locale}'; window.__SORT_ORDER = '${sortOrder}'; window.__APP_VERSION = '${version}'; window.__STORAGE_PATH = '${storagePath.replace(/\\/g, '\\\\')}'; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
+      `<head><script>window.__VIEW_MODE = 'sidebar'; window.__LOCALE = '${locale}'; window.__LOCALE_SOURCE = '${localeSource}'; window.__SORT_ORDER = '${sortOrder}'; window.__APP_VERSION = '${version}'; window.__STORAGE_PATH = ${JSON.stringify(storagePath)}; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
     );
 
     // 替换 CSS 资源路径为 webview 可访问的 URI

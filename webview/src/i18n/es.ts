@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'cuando hay texto seleccionado',
     contextMenu: 'Menú contextual',
     commandPalette: 'Paleta de comandos',
+    language: 'Idioma',
+    localeAuto: 'Auto',
+    localeManual: 'Manual',
+    resetToAuto: 'Restablecer a auto',
   },
   clearAll: {
     title: 'Confirmar borrado',

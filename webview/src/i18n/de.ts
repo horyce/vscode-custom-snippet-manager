@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'bei Textauswahl',
     contextMenu: 'Kontextmenü',
     commandPalette: 'Befehlspalette',
+    language: 'Sprache',
+    localeAuto: 'Automatisch',
+    localeManual: 'Manuell',
+    resetToAuto: 'Auf automatisch zurücksetzen',
   },
   clearAll: {
     title: 'Datenlöschung bestätigen',

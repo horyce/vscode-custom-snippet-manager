@@ -64,6 +64,7 @@ export type MessageType =
   | 'editorReady'
   | 'setSnippet'
   | 'changeLocale'
+  | 'resetLocaleToAuto'
   | 'exportSnippets'
   | 'exportResult'
   | 'importSnippets'

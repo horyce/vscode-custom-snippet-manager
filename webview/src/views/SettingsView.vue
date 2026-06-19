@@ -1,14 +1,15 @@
-<!-- 设置页面组件：当前仅包含"关于"信息，为后续设置功能预留入口 -->
+<!-- 设置页面组件：语言设置、快捷键说明、关于信息 -->
 <script setup lang="ts">
 /**
  * 设置页面
- * 包含关于页面，展示插件名称、版本号、GitHub 地址等基础信息
- * 后续可扩展实际设置功能
+ * 包含语言设置、快捷键说明、关于页面
+ * 语言设置支持自动检测（跟随 VS Code 语言）和手动选择
  */
 import { Icon } from '@iconify/vue'
 import { postToExt, onExtMessage } from '../composables/useMessage'
 import { useConfirm } from '../composables/useConfirm'
 import { useNotification } from '../composables/useNotification'
+import { SUPPORTED_LOCALES } from '../i18n'
 
 const { t } = useI18n()
 const { confirmState, showConfirm, handleConfirmOk, handleConfirmCancel } = useConfirm()
@@ -22,6 +23,36 @@ const storagePath = window.__STORAGE_PATH || ''
 const APP_NAME = 'Custom Snippet Manager'
 const GITHUB_URL = 'https://github.com/horyce/vscode-custom-snippet-manager'
 const LICENSE = 'MIT'
+
+// 语言设置相关 props
+const props = defineProps<{
+  /** 当前语言来源 */
+  localeSource: 'auto' | 'manual'
+  /** 当前生效的语言 */
+  currentLocale: string
+}>()
+
+// 语言设置相关 emits
+const emit = defineEmits<{
+  back: []
+  changeLocale: [locale: string]
+  resetLocaleToAuto: []
+}>()
+
+// 语言下拉选项，适配 LanguageSelect 组件格式
+const localeSelectOptions = computed(() =>
+  SUPPORTED_LOCALES.map((l) => ({
+    label: l.label,
+    value: l.value,
+    icon: `circle-flags:${l.flag}`,
+  }))
+)
+
+// 当前语言的显示名称
+const currentLocaleLabel = computed(() => {
+  const found = SUPPORTED_LOCALES.find(l => l.value === props.currentLocale)
+  return found ? found.label : props.currentLocale
+})
 
 /** 在外部浏览器中打开链接 */
 function openExternal(url: string) {
@@ -98,11 +129,6 @@ onExtMessage('showNotification', (payload) => {
     showError(message)
   }
 })
-
-// 定义 emit，用于返回上一页
-const emit = defineEmits<{
-  back: []
-}>()
 </script>
 
 <template>
@@ -125,6 +151,36 @@ const emit = defineEmits<{
         </div>
         <h3 class="about-name">{{ APP_NAME }}</h3>
         <span class="about-version">v{{ appVersion }}</span>
+      </div>
+
+      <!-- 语言设置区域 -->
+      <div class="locale-section">
+        <h4 class="section-title">{{ t('settings.language') }}</h4>
+        <div class="locale-setting">
+          <!-- 语言来源指示 -->
+          <div class="locale-source-row">
+            <span class="locale-source-label">{{ currentLocaleLabel }}</span>
+            <span class="locale-source-badge" :class="localeSource">
+              {{ localeSource === 'auto' ? t('settings.localeAuto') : t('settings.localeManual') }}
+            </span>
+          </div>
+          <!-- 语言选择下拉 -->
+          <LanguageSelect
+            :model-value="currentLocale"
+            :options="localeSelectOptions"
+            class="locale-select-full"
+            @update:model-value="emit('changeLocale', $event)"
+          />
+          <!-- 重置为自动检测按钮 -->
+          <button
+            v-if="localeSource === 'manual'"
+            class="reset-locale-btn"
+            @click="emit('resetLocaleToAuto')"
+          >
+            <Icon icon="carbon:reset" width="14" height="14" />
+            {{ t('settings.resetToAuto') }}
+          </button>
+        </div>
       </div>
 
       <!-- 信息列表 -->
@@ -310,6 +366,73 @@ const emit = defineEmits<{
   @include flex-column;
   gap: 2px;
   margin-bottom: $spacing-xl;
+}
+
+// ===== 语言设置 =====
+.locale-section {
+  width: 100%;
+  margin-bottom: $spacing-xl;
+}
+
+.locale-setting {
+  @include flex-column;
+  gap: $spacing-sm;
+  padding: 0 14px;
+}
+
+.locale-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.locale-source-label {
+  font-size: $font-size-base;
+  color: $color-foreground;
+  font-weight: 500;
+}
+
+.locale-source-badge {
+  font-size: $font-size-xs;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+
+  &.auto {
+    color: var(--vscode-notificationsInfoIcon-foreground, #3794ff);
+    background: rgba(55, 148, 255, 0.12);
+  }
+
+  &.manual {
+    color: var(--vscode-notificationsWarningIcon-foreground, #cca700);
+    background: rgba(204, 167, 0, 0.12);
+  }
+}
+
+.locale-select-full {
+  width: 100%;
+}
+
+.reset-locale-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border: 1px solid $border-input;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-description;
+  font-size: $font-size-sm;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: $bg-hover;
+    color: $color-foreground;
+    border-color: $color-foreground;
+  }
 }
 
 .info-item {

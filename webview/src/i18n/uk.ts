@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'коли текст виділено',
     contextMenu: 'Контекстне меню',
     commandPalette: 'Палітра команд',
+    language: 'Мова',
+    localeAuto: 'Авто',
+    localeManual: 'Вручну',
+    resetToAuto: 'Скинути на авто',
   },
   clearAll: {
     title: 'Підтвердити очищення даних',

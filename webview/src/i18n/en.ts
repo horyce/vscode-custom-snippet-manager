@@ -163,6 +163,10 @@ export default {
     whenTextSelected: 'when text selected',
     contextMenu: 'Context Menu',
     commandPalette: 'Command Palette',
+    language: 'Language',
+    localeAuto: 'Auto',
+    localeManual: 'Manual',
+    resetToAuto: 'Reset to Auto',
   },
   clearAll: {
     title: 'Clear Data Confirmation',

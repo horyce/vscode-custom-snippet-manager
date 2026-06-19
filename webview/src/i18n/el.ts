@@ -157,6 +157,10 @@ export default {
     whenTextSelected: 'όταν έχει επιλεγεί κείμενο',
     contextMenu: 'Μενού περιβάλλοντος',
     commandPalette: 'Παλέτα εντολών',
+    language: 'Γλώσσα',
+    localeAuto: 'Αυτόματο',
+    localeManual: 'Χειροκίνητο',
+    resetToAuto: 'Επαναφορά σε αυτόματο',
   },
   clearAll: {
     title: 'Επιβεβαίωση διαγραφής δεδομένων',

@@ -8,6 +8,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+
+- **Language Settings**: Plugin language now auto-syncs with VS Code display language; added language dropdown in settings page with manual override and reset-to-auto option
+
 ### Fixed
 
 - **Code Completion**: Fixed the issue where code completion could fail to show snippets if triggered before data loading completed
