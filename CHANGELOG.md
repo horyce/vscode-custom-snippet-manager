@@ -10,7 +10,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Added
 
-- **Language Settings**: Plugin language now auto-syncs with VS Code display language; added language dropdown in settings page with manual override and reset-to-auto option
+- **Language Settings**: Plugin language now auto-syncs with VS Code display language; language selector moved from header to settings page with manual override and reset-to-auto option
 
 ### Fixed
 

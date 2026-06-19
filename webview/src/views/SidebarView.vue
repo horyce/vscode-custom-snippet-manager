@@ -16,7 +16,6 @@ import { useNotification } from '../composables/useNotification'
 import { useConfirm } from '../composables/useConfirm'
 import SettingsView from './SettingsView.vue'
 import SnippetPreviewCard from '../components/SnippetPreviewCard.vue'
-import { SUPPORTED_LOCALES } from '../i18n'
 
 const { t, locale } = useI18n()
 const { notification, showError, showSuccess, showWarning, clearNotification } = useNotification()
@@ -77,14 +76,6 @@ const currentSortLabel = computed(() => {
 // 语言来源：'auto' 跟随 VS Code 语言，'manual' 手动设置
 const localeSource = ref<'auto' | 'manual'>(window.__LOCALE_SOURCE || 'auto')
 
-// 语言切换下拉选项，适配 LanguageSelect 组件格式
-const localeSelectOptions = computed(() =>
-  SUPPORTED_LOCALES.map((l) => ({
-    label: l.label,
-    value: l.value,
-    icon: `circle-flags:${l.flag}`,
-  }))
-)
 
 /** 切换语言，标记为手动模式并通知后端持久化 */
 function changeLocale(val: string) {
@@ -753,17 +744,10 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
     <SettingsView v-if="currentView === 'settings'" :locale-source="localeSource" :current-locale="locale" @back="currentView = 'list'" @change-locale="changeLocale" @reset-locale-to-auto="resetLocaleToAuto" />
     <!-- 片段列表视图 -->
     <template v-else>
-    <!-- 顶部标题栏：图标 + 标题 + 语言切换 -->
+    <!-- 顶部标题栏：图标 + 标题 + 设置按钮 -->
     <div class="sidebar-header">
       <div class="header-content">
         <h2 class="header-title">{{ t('app.title') }}</h2>
-        <!-- 语言切换下拉菜单 -->
-        <LanguageSelect
-          :model-value="locale"
-          :options="localeSelectOptions"
-          class="locale-select"
-          @update:model-value="changeLocale"
-        />
         <!-- 设置按钮 -->
         <button class="settings-btn" :title="t('settings.title')" @click="currentView = 'settings'">
           <Icon icon="carbon:settings" width="15" height="15" />
@@ -1084,45 +1068,6 @@ function handleFolderDrop(_event: DragEvent, targetFolderId: string) {
 .settings-btn {
   @include icon-btn(28px);
   flex-shrink: 0;
-}
-
-// ===== 语言切换 =====
-.locale-select {
-  position: relative;
-  flex-shrink: 0;
-  width: auto;
-
-  :deep(.lang-select) {
-    width: auto;
-  }
-
-  :deep(.lang-select-trigger) {
-    width: auto;
-    padding: 3px 6px;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    gap: 3px;
-  }
-
-  :deep(.lang-icon) {
-    font-size: 16px;
-  }
-
-  :deep(.lang-label) {
-    font-size: 10px;
-  }
-
-  :deep(.lang-select-arrow) {
-    width: 10px;
-    height: 10px;
-  }
-
-  :deep(.lang-select-dropdown) {
-    right: 0;
-    left: auto;
-    min-width: 160px;
-  }
 }
 
 .create-btn {
