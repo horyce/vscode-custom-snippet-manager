@@ -6,6 +6,12 @@
 
 [English Changelog](./CHANGELOG.md)
 
+## [Unreleased]
+
+### 修复
+
+- **代码补全**：修复 prefix 包含空格或特殊字符时（如 `for of`）替换范围不准确的问题
+
 ## [1.3.3] - 2026-06-21
 
 ### 新增

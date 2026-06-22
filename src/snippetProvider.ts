@@ -86,23 +86,32 @@ export class SnippetCompletionProvider implements vscode.CompletionItemProvider 
     snippetPrefix: string,
     position: vscode.Position
   ): vscode.Range | undefined {
-    // 从行首文本中查找与 prefix 匹配的起始位置
     // 使用不区分大小写的匹配，提升用户体验
     const lowerLine = linePrefix.toLowerCase();
     const lowerPrefix = snippetPrefix.toLowerCase();
 
-    // 尝试从行尾向前查找 prefix 的起始位置
-    for (let i = linePrefix.length; i >= 0; i--) {
+    // 从行首向后查找 linePrefix 中属于 snippetPrefix 前缀的最长匹配
+    // 最长匹配能避免含空格的 prefix（如 "for of"）只替换到末尾少数字符
+    for (let i = 0; i <= linePrefix.length; i++) {
       const remaining = lowerLine.substring(i);
-      if (lowerPrefix.startsWith(remaining) && remaining.length > 0) {
-        return new vscode.Range(
-          new vscode.Position(position.line, i),
-          position
-        );
+
+      if (remaining.length === 0 || !lowerPrefix.startsWith(remaining)) {
+        continue;
       }
+
+      // 匹配起始位置必须是行首或前一个字符为非单词字符
+      // 防止在标识符中间触发补全，避免特殊字符或空格导致意外替换范围
+      if (i > 0 && /\w/.test(linePrefix[i - 1])) {
+        continue;
+      }
+
+      return new vscode.Range(
+        new vscode.Position(position.line, i),
+        position
+      );
     }
 
-    // 如果没有找到重叠部分，则不设置范围（使用默认行为）
+    // 如果没有找到合适的匹配，则不设置范围（使用默认行为）
     return undefined;
   }
 

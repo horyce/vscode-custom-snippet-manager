@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 [中文更新日志](./CHANGELOG.zh-CN.md)
 
+## [Unreleased]
+
+### Fixed
+
+- **Code Completion**: Fixed inaccurate replacement range when snippet prefix contains spaces or special characters (e.g. `for of`)
+
 ## [1.3.3] - 2026-06-21
 
 ### Added
