@@ -1,6 +1,8 @@
-<!-- 片段语法帮助组件：折叠展示 VS Code SnippetString 语法提示 -->
+<!-- 片段语法帮助组件：折叠展示 VS Code SnippetString 完整语法 -->
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+
+const { t } = useI18n()
 
 // 展开/折叠状态
 const expanded = ref(false)
@@ -9,13 +11,103 @@ const expanded = ref(false)
 function toggle() {
   expanded.value = !expanded.value
 }
+
+// VS Code SnippetString 完整语法说明
+const sections = computed(() => [
+  {
+    title: t('syntax.basicTitle'),
+    items: [
+      { code: '$1, $2, $3...', desc: t('syntax.tabstop') },
+      { code: '$0', desc: t('syntax.tabstopFinal') },
+      { code: '${1:label}', desc: t('syntax.placeholder') },
+      { code: '${1|a,b,c|}', desc: t('syntax.choice') },
+    ],
+  },
+  {
+    title: t('syntax.selectionTitle'),
+    items: [
+      { code: '$TM_SELECTED_TEXT', desc: t('syntax.selectedText') },
+      { code: '$TM_CURRENT_LINE', desc: t('syntax.currentLine') },
+      { code: '$TM_CURRENT_WORD', desc: t('syntax.currentWord') },
+      { code: '$TM_LINE_INDEX', desc: t('syntax.lineIndex') },
+      { code: '$TM_LINE_NUMBER', desc: t('syntax.lineNumber') },
+      { code: '$CURSOR_INDEX', desc: t('syntax.cursorIndex') },
+      { code: '$CURSOR_NUMBER', desc: t('syntax.cursorNumber') },
+    ],
+  },
+  {
+    title: t('syntax.fileTitle'),
+    items: [
+      { code: '$TM_FILENAME', desc: t('syntax.filename') },
+      { code: '$TM_FILENAME_BASE', desc: t('syntax.filenameBase') },
+      { code: '$TM_DIRECTORY', desc: t('syntax.directory') },
+      { code: '$TM_FILEPATH', desc: t('syntax.filepath') },
+      { code: '$RELATIVE_FILEPATH', desc: t('syntax.relativeFilepath') },
+      { code: '$WORKSPACE_NAME', desc: t('syntax.workspaceName') },
+      { code: '$WORKSPACE_FOLDER', desc: t('syntax.workspaceFolder') },
+    ],
+  },
+  {
+    title: t('syntax.clipboardTitle'),
+    items: [{ code: '$CLIPBOARD', desc: t('syntax.clipboard') }],
+  },
+  {
+    title: t('syntax.dateTitle'),
+    items: [
+      { code: '$CURRENT_YEAR', desc: t('syntax.currentYear') },
+      { code: '$CURRENT_YEAR_SHORT', desc: t('syntax.currentYearShort') },
+      { code: '$CURRENT_MONTH', desc: t('syntax.currentMonth') },
+      { code: '$CURRENT_MONTH_NAME', desc: t('syntax.currentMonthName') },
+      { code: '$CURRENT_MONTH_NAME_SHORT', desc: t('syntax.currentMonthNameShort') },
+      { code: '$CURRENT_DATE', desc: t('syntax.currentDate') },
+      { code: '$CURRENT_DAY_NAME', desc: t('syntax.currentDayName') },
+      { code: '$CURRENT_DAY_NAME_SHORT', desc: t('syntax.currentDayNameShort') },
+      { code: '$CURRENT_HOUR', desc: t('syntax.currentHour') },
+      { code: '$CURRENT_HOUR12', desc: t('syntax.currentHour12') },
+      { code: '$CURRENT_MINUTE', desc: t('syntax.currentMinute') },
+      { code: '$CURRENT_SECOND', desc: t('syntax.currentSecond') },
+      { code: '$CURRENT_SECONDS_UNIX', desc: t('syntax.currentSecondsUnix') },
+      { code: '$CURRENT_TIMEZONE_OFFSET', desc: t('syntax.currentTimezoneOffset') },
+    ],
+  },
+  {
+    title: t('syntax.randomTitle'),
+    items: [
+      { code: '$RANDOM', desc: t('syntax.random') },
+      { code: '$RANDOM_HEX', desc: t('syntax.randomHex') },
+      { code: '$UUID', desc: t('syntax.uuid') },
+    ],
+  },
+  {
+    title: t('syntax.commentTitle'),
+    items: [
+      { code: '$BLOCK_COMMENT_START', desc: t('syntax.blockCommentStart') },
+      { code: '$BLOCK_COMMENT_END', desc: t('syntax.blockCommentEnd') },
+      { code: '$LINE_COMMENT', desc: t('syntax.lineComment') },
+    ],
+  },
+  {
+    title: t('syntax.transformTitle'),
+    items: [
+      { code: '${TM_FILENAME/(.*)\\..+$/$1/}', desc: t('syntax.transform') },
+    ],
+  },
+  {
+    title: t('syntax.escapeTitle'),
+    items: [
+      { code: '\\$', desc: t('syntax.escapeDollar') },
+      { code: '\\}', desc: t('syntax.escapeBrace') },
+      { code: '\\\\', desc: t('syntax.escapeBackslash') },
+    ],
+  },
+])
 </script>
 
 <template>
   <div class="syntax-help" :class="{ 'syntax-help--expanded': expanded }">
     <button class="syntax-help__header" type="button" @click="toggle">
       <Icon icon="carbon:code" width="16" height="16" />
-      <span class="syntax-help__title">VS Code 片段语法提示</span>
+      <span class="syntax-help__title">{{ t('syntax.title') }}</span>
       <Icon
         class="syntax-help__arrow"
         icon="carbon:chevron-down"
@@ -25,33 +117,23 @@ function toggle() {
     </button>
     <transition name="expand">
       <div v-show="expanded" class="syntax-help__body">
-        <div class="syntax-help__grid">
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">$1</code>
-            <span class="syntax-help__desc">按 Tab 跳转的第一个位置</span>
-          </div>
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">$0</code>
-            <span class="syntax-help__desc">最终光标停留位置</span>
-          </div>
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">${1:label}</code>
-            <span class="syntax-help__desc">带默认值的占位符</span>
-          </div>
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">${1|a,b,c|}</code>
-            <span class="syntax-help__desc">可选值下拉列表</span>
-          </div>
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">$TM_SELECTED_TEXT</code>
-            <span class="syntax-help__desc">插入时自动填入选中的文本</span>
-          </div>
-          <div class="syntax-help__item">
-            <code class="syntax-help__code">$TM_FILENAME</code>
-            <span class="syntax-help__desc">当前文件名</span>
+        <div
+          v-for="(section, sIdx) in sections"
+          :key="sIdx"
+          class="syntax-help__section"
+        >
+          <h4 class="syntax-help__section-title">{{ section.title }}</h4>
+          <div class="syntax-help__grid">
+            <div
+              v-for="(item, iIdx) in section.items"
+              :key="iIdx"
+              class="syntax-help__item"
+            >
+              <code class="syntax-help__code">{{ item.code }}</code>
+              <span class="syntax-help__desc">{{ item.desc }}</span>
+            </div>
           </div>
         </div>
-        <p class="syntax-help__more">更多语法（变量、正则转换等）将在后续版本补充…</p>
       </div>
     </transition>
   </div>
@@ -99,19 +181,40 @@ function toggle() {
   &__body {
     padding: 0 $spacing-md 12px;
     border-top: 1px solid $border-input;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  &__section {
+    padding-top: 12px;
+
+    & + & {
+      border-top: 1px solid $border-input;
+      margin-top: 10px;
+    }
+  }
+
+  &__section-title {
+    margin: 0 0 8px;
+    font-size: $font-size-xs;
+    font-weight: 600;
+    color: $color-foreground;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px 16px;
-    padding-top: 12px;
+    gap: 6px 16px;
   }
 
   &__item {
     display: flex;
     align-items: center;
     gap: $spacing-sm;
+    min-width: 0;
   }
 
   &__code {
@@ -127,13 +230,7 @@ function toggle() {
   &__desc {
     color: $color-description;
     font-size: $font-size-xs;
-  }
-
-  &__more {
-    margin: 12px 0 0;
-    color: $color-description;
-    font-size: $font-size-xs;
-    opacity: 0.7;
+    @include text-ellipsis;
   }
 }
 
@@ -154,6 +251,6 @@ function toggle() {
 .expand-enter-to,
 .expand-leave-from {
   opacity: 1;
-  max-height: 300px;
+  max-height: 420px;
 }
 </style>
