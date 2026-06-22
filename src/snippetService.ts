@@ -91,6 +91,8 @@ export class SnippetService {
   private initPromise: Promise<void>;
   /** 有未持久化 usageCount 变更的文件夹集合 */
   private dirtyFolders: Set<string> = new Set();
+  /** 所有片段的扁平化缓存，避免每次 getAll 都重建数组 */
+  private allSnippetsCache: SnippetData[] | null = null;
   /** 防抖写入定时器 */
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   /** 防抖延迟（毫秒），高频更新时合并写入 */
@@ -169,6 +171,8 @@ export class SnippetService {
       const list = await this.loadFolderSnippets(folder.id);
       this.snippetsByFolder.set(folder.id, list);
     }
+    // 初始加载完成后使缓存失效，确保首次 getAll 使用最新数据
+    this.invalidateAllCache();
   }
 
   /**
@@ -200,6 +204,7 @@ export class SnippetService {
     }
 
     this.snippetsByFolder.set(DEFAULT_FOLDER_ID, legacySnippets);
+    this.invalidateAllCache();
     // 写入新结构，旧 snippets.json 不删除（作为备份）
     await this.saveFoldersMeta();
     await this.saveFolderSnippets(DEFAULT_FOLDER_ID);
@@ -295,6 +300,11 @@ export class SnippetService {
     return err;
   }
 
+  /** 使 getAll 扁平化缓存失效，内存数据或排序发生变化时调用 */
+  private invalidateAllCache(): void {
+    this.allSnippetsCache = null;
+  }
+
   /** 持久化文件夹清单到 folders.json */
   private async saveFoldersMeta(): Promise<void> {
     try {
@@ -348,6 +358,10 @@ export class SnippetService {
    * 顺序：按文件夹 order，再按文件夹内原有顺序
    */
   getAll(): SnippetData[] {
+    if (this.allSnippetsCache) {
+      // 返回副本避免外部修改缓存数组本身，片段对象只读使用
+      return [...this.allSnippetsCache];
+    }
     const result: SnippetData[] = [];
     for (const folder of this.getFolders()) {
       const list = this.snippetsByFolder.get(folder.id) ?? [];
@@ -355,7 +369,8 @@ export class SnippetService {
         result.push({ ...s, folderId: folder.id });
       }
     }
-    return result;
+    this.allSnippetsCache = result;
+    return [...result];
   }
 
   /**
@@ -412,6 +427,7 @@ export class SnippetService {
     const list = this.snippetsByFolder.get(folderId) ?? [];
     list.push(snippet);
     this.snippetsByFolder.set(folderId, list);
+    this.invalidateAllCache();
     await this.saveFolderSnippets(folderId);
     return { ...snippet, folderId };
   }
@@ -446,6 +462,7 @@ export class SnippetService {
       // 同文件夹内原地更新
       const list = this.snippetsByFolder.get(oldFolderId)!;
       list[loc.index] = updated;
+      this.invalidateAllCache();
       await this.saveFolderSnippets(oldFolderId);
     } else {
       // 跨文件夹迁移：旧文件夹移除，新文件夹追加，两个文件都需持久化
@@ -454,6 +471,7 @@ export class SnippetService {
       const newList = this.snippetsByFolder.get(newFolderId) ?? [];
       newList.push(updated);
       this.snippetsByFolder.set(newFolderId, newList);
+      this.invalidateAllCache();
       await Promise.all([
         this.saveFolderSnippets(oldFolderId),
         this.saveFolderSnippets(newFolderId),
@@ -475,6 +493,7 @@ export class SnippetService {
     const list = this.snippetsByFolder.get(loc.folderId)!;
     list.splice(loc.index, 1);
     this.dirtyFolders.delete(loc.folderId);
+    this.invalidateAllCache();
     await this.saveFolderSnippets(loc.folderId);
     return true;
   }
@@ -490,6 +509,8 @@ export class SnippetService {
     }
     loc.snippet.usageCount = (loc.snippet.usageCount ?? 0) + 1;
     this.dirtyFolders.add(loc.folderId);
+    // usageCount 变化后 getAll 应返回最新计数，使缓存失效
+    this.invalidateAllCache();
     this.scheduleSave();
   }
 
@@ -540,6 +561,7 @@ export class SnippetService {
     this.snippetsByFolder.set(DEFAULT_FOLDER_ID, []);
     // 清除脏标记，避免防抖刷盘覆盖空数据后又写回旧计数
     this.dirtyFolders.clear();
+    this.invalidateAllCache();
     await Promise.all([
       this.saveFoldersMeta(),
       this.saveFolderSnippets(DEFAULT_FOLDER_ID),
@@ -595,6 +617,7 @@ export class SnippetService {
       }
     }
 
+    this.invalidateAllCache();
     await Promise.all(Array.from(affected).map((folderId) => this.saveFolderSnippets(folderId)));
   }
 
@@ -622,6 +645,7 @@ export class SnippetService {
     };
     this.folders.push(folder);
     this.snippetsByFolder.set(folder.id, []);
+    this.invalidateAllCache();
     await Promise.all([this.saveFoldersMeta(), this.saveFolderSnippets(folder.id)]);
     return folder;
   }
@@ -677,6 +701,7 @@ export class SnippetService {
     this.folders.splice(idx, 1);
     this.snippetsByFolder.delete(folderId);
     this.dirtyFolders.delete(folderId);
+    this.invalidateAllCache();
     await Promise.all([this.saveFoldersMeta(), this.deleteFolderFile(folderId)]);
     return true;
   }
@@ -723,6 +748,7 @@ export class SnippetService {
       this.snippetsByFolder.delete(folderId);
       this.dirtyFolders.delete(folderId);
     }
+    this.invalidateAllCache();
 
     await Promise.all([
       this.saveFoldersMeta(),
@@ -754,6 +780,7 @@ export class SnippetService {
         f.order = idx + 1;
       }
     }
+    this.invalidateAllCache();
     await this.saveFoldersMeta();
     return true;
   }
