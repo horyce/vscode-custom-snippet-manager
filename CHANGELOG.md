@@ -11,6 +11,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Fixed
 
 - **Code Completion**: Fixed inaccurate replacement range when snippet prefix contains spaces or special characters (e.g. `for of`)
+- **Export**: Fixed silently skipped failures when exporting multiple folders; partial failures now show a warning with the success and failure counts
 
 ## [1.3.3] - 2026-06-21
 

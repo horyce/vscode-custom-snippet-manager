@@ -330,6 +330,8 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
           success: result.success,
           folderCount: result.folderCount,
           count: result.count,
+          failedCount: result.failedCount,
+          failedNames: result.failedNames,
         });
         break;
       }

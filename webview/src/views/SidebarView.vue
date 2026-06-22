@@ -389,15 +389,32 @@ function handleImport() {
 
 // 监听后端返回的导出结果
 onExtMessage('exportResult', (payload) => {
-  const result = payload as { success: boolean; folderCount?: number; count?: number }
+  const result = payload as {
+    success: boolean
+    folderCount?: number
+    count?: number
+    failedCount?: number
+    failedNames?: string[]
+  }
   if (result.success) {
-    showSuccess(
-      t('importExport.exportSuccessDetail', {
-        folderCount: result.folderCount ?? 0,
-        count: result.count ?? 0,
-      })
-    )
-  } else {
+    // 部分文件夹导出失败时给出警告提示，让用户知道并非全部成功
+    if (result.failedCount && result.failedCount > 0) {
+      showWarning(
+        t('importExport.exportPartialDetail', {
+          folderCount: result.folderCount ?? 0,
+          failedCount: result.failedCount,
+        })
+      )
+    } else {
+      showSuccess(
+        t('importExport.exportSuccessDetail', {
+          folderCount: result.folderCount ?? 0,
+          count: result.count ?? 0,
+        })
+      )
+    }
+  } else if (result.failedCount && result.failedCount > 0) {
+    // 全部导出失败时显示错误
     showError(t('importExport.exportFailed'))
   }
 })

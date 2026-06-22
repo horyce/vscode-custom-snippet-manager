@@ -118,6 +118,7 @@ export default {
     merge: 'Об\'єднати',
     mergeDesc: 'Зберегти обидва, імпортовані фрагменти будуть створені як копії',
     exportSuccessDetail: 'Експортовано {folderCount} тек, загалом {count} фрагментів коду',
+    exportPartialDetail: 'Експортовано {folderCount} тек, {failedCount} не вдалося',
     importFileReadError: 'Не вдалося прочитати файл: {error}',
     importInvalidJson: 'Вміст файлу не є дійсним JSON',
     importValidationError: 'Помилка валідації даних: {error}',

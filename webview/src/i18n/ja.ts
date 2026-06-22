@@ -122,6 +122,7 @@ export default {
     merge: 'マージ',
     mergeDesc: '両方を保持し、インポートしたスニペットは新しいコピーとして作成',
     exportSuccessDetail: '{folderCount} 個のフォルダ、合計 {count} 件のスニペットをエクスポートしました',
+    exportPartialDetail: '{folderCount} 個のフォルダをエクスポートしました（{failedCount} 件の失敗）',
     importFileReadError: 'ファイルを読み込めません：{error}',
     importInvalidJson: 'ファイルの内容が有効な JSON 形式ではありません',
     importValidationError: 'データ検証に失敗しました：{error}',

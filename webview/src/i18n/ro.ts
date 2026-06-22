@@ -118,6 +118,7 @@ export default {
     merge: 'Îmbinați',
     mergeDesc: 'Păstrați ambele, fragmentele importate vor fi create ca copii',
     exportSuccessDetail: 'Exportate {folderCount} dosare, în total {count} fragmente de cod',
+    exportPartialDetail: 'Exportate {folderCount} dosare, {failedCount} eșuat',
     importFileReadError: 'Nu se poate citi fișierul: {error}',
     importInvalidJson: 'Conținutul fișierului nu este JSON valid',
     importValidationError: 'Validarea datelor a eșuat: {error}',

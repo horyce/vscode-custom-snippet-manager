@@ -122,6 +122,7 @@ export default {
     merge: '合併',
     mergeDesc: '保留兩者，匯入的片段將生成新副本',
     exportSuccessDetail: '成功匯出 {folderCount} 個資料夾，共 {count} 個程式碼片段',
+    exportPartialDetail: '成功匯出 {folderCount} 個資料夾，{failedCount} 個失敗',
     importFileReadError: '無法讀取檔案：{error}',
     importInvalidJson: '檔案內容不是有效的 JSON 格式',
     importValidationError: '資料驗證失敗：{error}',

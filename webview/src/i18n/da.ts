@@ -118,6 +118,7 @@ export default {
     merge: 'Flet',
     mergeDesc: 'Behold begge, importerede kodestykker oprettes som kopier',
     exportSuccessDetail: 'Eksporterede {folderCount} mapper, i alt {count} kodestykker',
+    exportPartialDetail: 'Eksporterede {folderCount} mapper, {failedCount} fejlede',
     importFileReadError: 'Kan ikke læse filen: {error}',
     importInvalidJson: 'Filindholdet er ikke gyldig JSON',
     importValidationError: 'Datavalidering mislykkedes: {error}',

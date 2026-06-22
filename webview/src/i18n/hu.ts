@@ -118,6 +118,7 @@ export default {
     merge: 'Egyesítés',
     mergeDesc: 'Mindkettő megtartása, importált kódrészletek másolatként jönnek létre',
     exportSuccessDetail: '{folderCount} mappa exportálva, összesen {count} kódrészlet',
+    exportPartialDetail: '{folderCount} mappa exportálva, {failedCount} sikertelen',
     importFileReadError: 'A fájl nem olvasható: {error}',
     importInvalidJson: 'A fájl tartalma nem érvényes JSON',
     importValidationError: 'Adatérvényesítés sikertelen: {error}',

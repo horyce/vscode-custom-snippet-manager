@@ -122,6 +122,7 @@ export default {
     merge: 'Birleştir',
     mergeDesc: 'İkisini de koru, içe aktarılan snippet\'ler kopya olarak oluşturulacak',
     exportSuccessDetail: '{folderCount} klasör, toplam {count} snippet dışa aktarıldı',
+    exportPartialDetail: '{folderCount} klasör dışa aktarıldı, {failedCount} başarısız',
     importFileReadError: 'Dosya okunamıyor: {error}',
     importInvalidJson: 'Dosya içeriği geçerli bir JSON değil',
     importValidationError: 'Veri doğrulaması başarısız: {error}',

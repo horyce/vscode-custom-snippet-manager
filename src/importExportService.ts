@@ -72,6 +72,10 @@ interface ExportResult {
   folderCount?: number;
   /** 成功导出的片段总数 */
   count?: number;
+  /** 导出失败的文件夹数量 */
+  failedCount?: number;
+  /** 导出失败的文件夹名称列表 */
+  failedNames?: string[];
 }
 
 /** 导入错误类型，包含 i18n key 和参数，供 Webview 端本地化显示 */
@@ -142,6 +146,8 @@ export class ImportExportService {
     const usedNames = new Set<string>();
     let folderCount = 0;
     let snippetCount = 0;
+    // 收集单个文件夹写入失败的信息，返回给前端显示部分失败提示
+    const failedNames: string[] = [];
 
     for (const folder of targets) {
       const snippets = this.snippetService.getSnippetsByFolder(folder.id);
@@ -167,14 +173,32 @@ export class ImportExportService {
         folderCount++;
         snippetCount += exportableSnippets.length;
       } catch {
-        // 单个文件写入失败时跳过，继续导出其余文件夹
+        // 单个文件写入失败时记录文件夹名称，继续导出其余文件夹
+        failedNames.push(folder.name);
       }
     }
 
-    if (folderCount === 0) {
+    if (folderCount === 0 && failedNames.length === 0) {
+      // 没有可导出的目标文件夹（用户取消或数据为空已在前面处理）
       return { success: false };
     }
-    return { success: true, folderCount, count: snippetCount };
+
+    if (folderCount === 0) {
+      // 全部文件夹都导出失败
+      return {
+        success: false,
+        failedCount: failedNames.length,
+        failedNames,
+      };
+    }
+
+    return {
+      success: true,
+      folderCount,
+      count: snippetCount,
+      failedCount: failedNames.length,
+      failedNames,
+    };
   }
 
   /**

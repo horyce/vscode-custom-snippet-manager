@@ -122,6 +122,7 @@ export default {
     merge: '병합',
     mergeDesc: '둘 다 유지하고 가져온 스니펫은 새 복사본으로 생성',
     exportSuccessDetail: '{folderCount}개의 폴더, 총 {count}개의 스니펫을 내보냈습니다',
+    exportPartialDetail: '{folderCount}개의 폴더를 내보냈습니다（{failedCount}개 실패）',
     importFileReadError: '파일을 읽을 수 없습니다: {error}',
     importInvalidJson: '파일 내용이 유효한 JSON 형식이 아닙니다',
     importValidationError: '데이터 검증 실패: {error}',

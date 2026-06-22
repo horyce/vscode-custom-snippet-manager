@@ -118,6 +118,7 @@ export default {
     merge: 'Sammanfoga',
     mergeDesc: 'Behåll båda, importerade kodavsnitt skapas som kopior',
     exportSuccessDetail: 'Exporterade {folderCount} mappar, totalt {count} kodavsnitt',
+    exportPartialDetail: 'Exporterade {folderCount} mappar, {failedCount} misslyckades',
     importFileReadError: 'Kan inte läsa filen: {error}',
     importInvalidJson: 'Filinnehållet är inte giltig JSON',
     importValidationError: 'Datavalidering misslyckades: {error}',

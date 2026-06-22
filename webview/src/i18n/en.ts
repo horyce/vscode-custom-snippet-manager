@@ -122,6 +122,7 @@ export default {
     merge: 'Merge',
     mergeDesc: 'Keep both, imported snippets will be created as copies',
     exportSuccessDetail: 'Exported {folderCount} folder(s), {count} snippet(s) in total',
+    exportPartialDetail: 'Exported {folderCount} folder(s), {failedCount} failed',
     importFileReadError: 'Cannot read file: {error}',
     importInvalidJson: 'File content is not valid JSON',
     importValidationError: 'Data validation failed: {error}',

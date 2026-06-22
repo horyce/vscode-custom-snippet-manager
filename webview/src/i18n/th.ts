@@ -118,6 +118,7 @@ export default {
     merge: 'ผสาน',
     mergeDesc: 'เก็บทั้งสอง สนิปเพตที่นำเข้าจะถูกสร้างเป็นสำเนา',
     exportSuccessDetail: 'ส่งออก {folderCount} โฟลเดอร์ รวม {count} สนิปเพต',
+    exportPartialDetail: 'ส่งออก {folderCount} โฟลเดอร์, {failedCount} ล้มเหลว',
     importFileReadError: 'ไม่สามารถอ่านไฟล์: {error}',
     importInvalidJson: 'เนื้อหาไฟล์ไม่ใช่ JSON ที่ถูกต้อง',
     importValidationError: 'การตรวจสอบข้อมูลล้มเหลว: {error}',

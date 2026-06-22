@@ -122,6 +122,7 @@ export default {
     merge: 'Mesclar',
     mergeDesc: 'Manter ambos, os snippets importados serão criados como cópias',
     exportSuccessDetail: '{folderCount} pasta(s) exportada(s), {count} snippet(s) no total',
+    exportPartialDetail: '{folderCount} pasta(s) exportada(s), {failedCount} falha(s)',
     importFileReadError: 'Não é possível ler o arquivo: {error}',
     importInvalidJson: 'O conteúdo do arquivo não é um JSON válido',
     importValidationError: 'Falha na validação dos dados: {error}',

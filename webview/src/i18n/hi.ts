@@ -118,6 +118,7 @@ export default {
     merge: 'विलय करें',
     mergeDesc: 'दोनों रखें, आयातित स्निपेट प्रतियों के रूप में बनाए जाएंगे',
     exportSuccessDetail: '{folderCount} फ़ोल्डर निर्यात किए, कुल {count} स्निपेट',
+    exportPartialDetail: '{folderCount} फ़ोल्डर निर्यात किए, {failedCount} विफल',
     importFileReadError: 'फ़ाइल पढ़ी नहीं जा सकती: {error}',
     importInvalidJson: 'फ़ाइल सामग्री मान्य JSON नहीं है',
     importValidationError: 'डेटा सत्यापन विफल: {error}',

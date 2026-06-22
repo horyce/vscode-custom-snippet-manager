@@ -118,6 +118,7 @@ export default {
     merge: 'Sloučit',
     mergeDesc: 'Zachovat oboje, importované úryvky budou vytvořeny jako kopie',
     exportSuccessDetail: 'Exportováno {folderCount} složek, celkem {count} úryvků kódu',
+    exportPartialDetail: 'Exportováno {folderCount} složek, {failedCount} selhalo',
     importFileReadError: 'Nelze číst soubor: {error}',
     importInvalidJson: 'Obsah souboru není platný JSON',
     importValidationError: 'Validace dat selhala: {error}',

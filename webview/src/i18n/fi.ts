@@ -118,6 +118,7 @@ export default {
     merge: 'Yhdistä',
     mergeDesc: 'Säilytä molemmat, tuodut koodinpätkät luodaan kopioina',
     exportSuccessDetail: 'Viety {folderCount} kansiota, yhteensä {count} koodinpätkää',
+    exportPartialDetail: 'Viety {folderCount} kansiota, {failedCount} epäonnistui',
     importFileReadError: 'Tiedostoa ei voi lukea: {error}',
     importInvalidJson: 'Tiedoston sisältö ei ole kelvollista JSON-muotoa',
     importValidationError: 'Tietojen validointi epäonnistui: {error}',

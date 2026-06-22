@@ -118,6 +118,7 @@ export default {
     merge: 'Συγχώνευση',
     mergeDesc: 'Διατήρηση και των δύο, τα εισαγόμενα αποσπάσματα θα δημιουργηθούν ως αντίγραφα',
     exportSuccessDetail: 'Εξήχθησαν {folderCount} φάκελοι, συνολικά {count} αποσπάσματα κώδικα',
+    exportPartialDetail: 'Εξήχθησαν {folderCount} φάκελοι, {failedCount} απέτυχαν',
     importFileReadError: 'Δεν είναι δυνατή η ανάγνωση του αρχείου: {error}',
     importInvalidJson: 'Το περιεχόμενο του αρχείου δεν είναι έγκυρο JSON',
     importValidationError: 'Η επικύρωση δεδομένων απέτυχε: {error}',

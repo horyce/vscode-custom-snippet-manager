@@ -122,6 +122,7 @@ export default {
     merge: 'Scal',
     mergeDesc: 'Zachowaj oba, importowane snippety zostaną utworzone jako kopie',
     exportSuccessDetail: 'Wyeksportowano {folderCount} folder(ów), łącznie {count} snippetów',
+    exportPartialDetail: 'Wyeksportowano {folderCount} folder(ów), {failedCount} nie powiodło się',
     importFileReadError: 'Nie można odczytać pliku: {error}',
     importInvalidJson: 'Zawartość pliku nie jest prawidłowym formatem JSON',
     importValidationError: 'Walidacja danych nie powiodła się: {error}',

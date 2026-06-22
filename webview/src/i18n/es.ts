@@ -122,6 +122,7 @@ export default {
     merge: 'Fusionar',
     mergeDesc: 'Conservar ambos, los snippets importados se crearán como copias',
     exportSuccessDetail: '{folderCount} carpeta(s) exportada(s), {count} snippet(s) en total',
+    exportPartialDetail: '{folderCount} carpeta(s) exportada(s), {failedCount} fallo(s)',
     importFileReadError: 'No se puede leer el archivo: {error}',
     importInvalidJson: 'El contenido del archivo no es un JSON válido',
     importValidationError: 'Validación de datos fallida: {error}',

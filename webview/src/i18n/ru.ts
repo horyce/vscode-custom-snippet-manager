@@ -122,6 +122,7 @@ export default {
     merge: 'Объединить',
     mergeDesc: 'Сохранить оба варианта, импортируемые сниппеты будут созданы как копии',
     exportSuccessDetail: 'Экспортировано папок: {folderCount}, сниппетов: {count}',
+    exportPartialDetail: 'Экспортировано папок: {folderCount}, не удалось: {failedCount}',
     importFileReadError: 'Не удалось прочитать файл: {error}',
     importInvalidJson: 'Содержимое файла не является валидным JSON',
     importValidationError: 'Ошибка валидации данных: {error}',

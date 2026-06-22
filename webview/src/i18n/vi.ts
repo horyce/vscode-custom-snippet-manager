@@ -118,6 +118,7 @@ export default {
     merge: 'Gộp',
     mergeDesc: 'Giữ cả hai, đoạn mã nhập sẽ được tạo thành bản sao',
     exportSuccessDetail: 'Đã xuất {folderCount} thư mục, tổng cộng {count} đoạn mã',
+    exportPartialDetail: 'Đã xuất {folderCount} thư mục, {failedCount} thất bại',
     importFileReadError: 'Không thể đọc tệp: {error}',
     importInvalidJson: 'Nội dung tệp không phải JSON hợp lệ',
     importValidationError: 'Xác thực dữ liệu thất bại: {error}',

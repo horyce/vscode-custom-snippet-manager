@@ -118,6 +118,7 @@ export default {
     merge: 'Samenvoegen',
     mergeDesc: 'Behoud beide, geïmporteerde codefragmenten worden als kopieën aangemaakt',
     exportSuccessDetail: '{folderCount} map(pen) geëxporteerd, in totaal {count} codefragmenten',
+    exportPartialDetail: '{folderCount} map(pen) geëxporteerd, {failedCount} mislukt',
     importFileReadError: 'Kan bestand niet lezen: {error}',
     importInvalidJson: 'Bestandsinhoud is geen geldige JSON',
     importValidationError: 'Gegevensvalidatie mislukt: {error}',
