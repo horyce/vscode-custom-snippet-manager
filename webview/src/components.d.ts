@@ -22,6 +22,7 @@ declare module 'vue' {
     SearchInput: typeof import('./components/SearchInput.vue')['default']
     SnippetItem: typeof import('./components/SnippetItem.vue')['default']
     SnippetPreviewCard: typeof import('./components/SnippetPreviewCard.vue')['default']
+    SnippetSyntaxHelp: typeof import('./components/SnippetSyntaxHelp.vue')['default']
     StrategyOption: typeof import('./components/StrategyOption.vue')['default']
   }
 }

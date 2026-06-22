@@ -259,8 +259,11 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 底部固定区域：描述 + 语言/文件夹 -->
+      <!-- 底部固定区域：片段语法帮助 + 描述 + 语言/文件夹 -->
       <div class="editor-bottom">
+        <!-- 片段语法提示 -->
+        <SnippetSyntaxHelp />
+
         <!-- 描述 -->
         <div class="form-section">
           <div class="form-group">
