@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import { SnippetService } from './snippetService';
 import { ImportExportService } from './importExportService';
 import { WebviewPanel } from './webviewPanel';
+import { getErrorHtml } from './webviewUtils';
 import localesData from '../locales.json';
 
 /** Webview 消息格式 */
@@ -558,7 +559,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     try {
       await fs.promises.access(htmlPath);
     } catch {
-      return this.getErrorHtml('Run "npm run build:webview" first.');
+      return getErrorHtml('Run "npm run build:webview" first.');
     }
 
     let html = await fs.promises.readFile(htmlPath, 'utf-8');
@@ -609,15 +610,4 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     return html;
   }
 
-  /** 构建产物缺失时显示的错误页面 */
-  private getErrorHtml(message: string): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>Error</title></head>
-<body style="padding:20px;color:var(--vscode-errorForeground);font-family:var(--vscode-font-family);">
-  <h2>⚠️ Error</h2>
-  <p>${message}</p>
-</body>
-</html>`;
-  }
 }

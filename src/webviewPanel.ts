@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { SnippetService, SnippetData } from './snippetService';
+import { getErrorHtml } from './webviewUtils';
 import localesData from '../locales.json';
 
 /** Webview 发送的消息格式 */
@@ -214,7 +215,7 @@ export class WebviewPanel {
     try {
       await fs.promises.access(htmlPath);
     } catch {
-      return this.getErrorHtml('Run "npm run build:webview" first.');
+      return getErrorHtml('Run "npm run build:webview" first.');
     }
 
     let html = await fs.promises.readFile(htmlPath, 'utf-8');
@@ -261,18 +262,6 @@ export class WebviewPanel {
     html = html.replace('<head>', `<head>${csp}`);
 
     return html;
-  }
-
-  /** 构建产物缺失时显示的错误页面 */
-  private getErrorHtml(message: string): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>Error</title></head>
-<body style="padding:20px;color:var(--vscode-errorForeground);font-family:var(--vscode-font-family);">
-  <h2>⚠️ Error</h2>
-  <p>${message}</p>
-</body>
-</html>`;
   }
 
   /**
