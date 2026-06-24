@@ -24,7 +24,7 @@ const PACKAGE_MAP = {
  * 避免在脚本中重复维护图标列表，确保与统一配置同步
  */
 function parseIconsFromLanguages() {
-  const languagesPath = resolve(__dirname, '..', 'src', 'utils', 'languages.ts')
+  const languagesPath = resolve(__dirname, '..', '..', 'src', 'shared', 'languages.ts')
   const content = readFileSync(languagesPath, 'utf-8')
 
   // 提取所有 icon 字段值，格式如 icon: 'simple-icons:javascript'
