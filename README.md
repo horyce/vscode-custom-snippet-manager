@@ -166,12 +166,6 @@ Issues and Pull Requests are welcome:
 
 ---
 
-## 👥 Team
-
-Horyce
-
----
-
 ## 📬 Contact
 
 For feedback, bug reports, or feature requests:
