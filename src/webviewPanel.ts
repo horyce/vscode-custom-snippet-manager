@@ -5,11 +5,8 @@
  * 支持编辑器就绪检测，确保数据在 webview 完全加载后才发送
  */
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import { SnippetService, SnippetData } from './snippetService';
-import { getErrorHtml } from './webviewUtils';
-import localesData from '../locales.json';
+import { buildWebviewHtml, resolveLocale as resolveLocaleShared } from './shared/webviewHtmlBuilder';
 
 /** Webview 发送的消息格式 */
 interface WebviewMessage {
@@ -203,86 +200,20 @@ export class WebviewPanel {
 
   /**
    * 生成 webview 的 HTML 内容
-   * 读取构建产物 index.html，注入视图模式标识、CSP 策略，并替换资源路径
-   * 所有资源路径必须使用 asWebviewUri 处理，确保 webview 安全策略下可访问
+   * 委托共享构建函数，注入编辑器特有的全局变量
    */
   private async getWebviewHtml(webview: vscode.Webview): Promise<string> {
-    const distUri = vscode.Uri.joinPath(this.extensionUri, 'webview', 'dist');
-    const distPath = distUri.fsPath;
-
-    const htmlPath = path.join(distPath, 'index.html');
-    // 构建产物不存在时显示错误提示
-    try {
-      await fs.promises.access(htmlPath);
-    } catch {
-      return getErrorHtml('Run "npm run build:webview" first.');
-    }
-
-    let html = await fs.promises.readFile(htmlPath, 'utf-8');
-
-    // 注入视图模式、语言偏好、文件夹清单和 VS Code API
-    // 前端根据 __VIEW_MODE 决定渲染侧边栏还是编辑器
-    // 使用 resolveLocale 确保自动模式下也能获取正确的语言
-    const locale = this.resolveLocale();
+    const locale = resolveLocaleShared(this.context);
     // 文件夹清单注入，供编辑器"所属文件夹"下拉框渲染
     const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
-    html = html.replace(
-      '<head>',
-      `<head><script>window.__VIEW_MODE = 'editor'; window.__LOCALE = '${locale}'; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
-    );
 
-    // 替换 CSS 资源路径为 webview 可访问的 URI
-    html = html.replace(
-      /(<link[^>]*href=")([^"]*)(")/g,
-      (_match: string, p1: string, p2: string, p3: string) => {
-        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
-        return `${p1}${uri}${p3}`;
-      }
-    );
-
-    // 替换 JS 资源路径为 webview 可访问的 URI
-    html = html.replace(
-      /(<script[^>]*src=")([^"]*)(")/g,
-      (_match: string, p1: string, p2: string, p3: string) => {
-        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
-        return `${p1}${uri}${p3}`;
-      }
-    );
-
-    // 注入内容安全策略，限制资源加载来源
-    const csp = `
-      <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none';
-        style-src ${webview.cspSource} 'unsafe-inline';
-        script-src ${webview.cspSource} 'unsafe-inline';
-        img-src ${webview.cspSource} https: data:;
-        font-src ${webview.cspSource};"
-      />`;
-
-    html = html.replace('<head>', `<head>${csp}`);
-
-    return html;
-  }
-
-  /**
-   * 解析当前生效的语言偏好
-   * auto 模式：根据 vscode.env.language 映射到支持的语言列表
-   * manual 模式：直接返回手动设置的 locale 值
-   */
-  private resolveLocale(): string {
-    const source = this.context.globalState.get<'auto' | 'manual'>('localeSource', 'auto');
-    if (source === 'manual') {
-      return this.context.globalState.get<string>('locale', 'zh');
-    }
-    // auto 模式：从 VS Code 语言设置映射
-    const validLocales = localesData.locales.map(l => l.value);
-    const lower = vscode.env.language.toLowerCase();
-    const exact = validLocales.find(l => l.toLowerCase() === lower);
-    if (exact) { return exact; }
-    const prefix = lower.split('-')[0];
-    const prefixMatch = validLocales.find(l => l.toLowerCase() === prefix);
-    if (prefixMatch) { return prefixMatch; }
-    return 'en';
+    return buildWebviewHtml(webview, this.extensionUri, {
+      viewMode: 'editor',
+      locale,
+      injectVars: {
+        __FOLDERS: foldersJson,
+      },
+    });
   }
 
   /** 释放面板及相关资源 */

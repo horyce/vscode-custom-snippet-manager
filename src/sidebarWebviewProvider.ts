@@ -10,8 +10,8 @@ import * as fs from 'fs';
 import { SnippetService } from './snippetService';
 import { ImportExportService } from './importExportService';
 import { WebviewPanel } from './webviewPanel';
-import { getErrorHtml } from './webviewUtils';
 import { MessageType, WebviewMessage } from './messageTypes';
+import { buildWebviewHtml, resolveLocale as resolveLocaleShared, getLocaleSource as getLocaleSourceShared } from './shared/webviewHtmlBuilder';
 import localesData from '../locales.json';
 
 /**
@@ -77,7 +77,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
 
   /** 获取语言来源：'auto' 跟随 VS Code 语言，'manual' 手动设置 */
   public getLocaleSource(): 'auto' | 'manual' {
-    return this.context.globalState.get<'auto' | 'manual'>('localeSource', 'auto');
+    return getLocaleSourceShared(this.context);
   }
 
   /**
@@ -86,12 +86,7 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
    * manual 模式：直接返回手动设置的 locale 值
    */
   public resolveLocale(): string {
-    const source = this.getLocaleSource();
-    if (source === 'manual') {
-      return this.context.globalState.get<string>('locale', 'zh');
-    }
-    // auto 模式：从 VS Code 语言设置映射
-    return this.mapVscodeLocale(vscode.env.language);
+    return resolveLocaleShared(this.context);
   }
 
   /** 获取当前保存的语言偏好（兼容旧调用） */
@@ -107,28 +102,6 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
   /** 保存语言来源到 globalState */
   private setLocaleSource(source: 'auto' | 'manual'): void {
     this.context.globalState.update('localeSource', source);
-  }
-
-  /**
-   * 将 VS Code 语言标识映射到插件支持的语言
-   * 使用大小写不敏感匹配，未匹配时回退到英文
-   */
-  private mapVscodeLocale(vscodeLang: string): string {
-    const validLocales = localesData.locales.map(l => l.value);
-    const lower = vscodeLang.toLowerCase();
-    // 精确匹配（忽略大小写）
-    const exact = validLocales.find(l => l.toLowerCase() === lower);
-    if (exact) {
-      return exact;
-    }
-    // 前缀匹配：如 'zh-cn' 匹配 'zh'，'pt-br' 匹配 'pt'
-    const prefix = lower.split('-')[0];
-    const prefixMatch = validLocales.find(l => l.toLowerCase() === prefix);
-    if (prefixMatch) {
-      return prefixMatch;
-    }
-    // 未匹配时回退到英文
-    return 'en';
   }
 
   /** 获取排序偏好，默认倒序（由新至旧） */
@@ -543,24 +516,9 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
 
   /**
    * 生成侧边栏 webview 的 HTML 内容
-   * 与编辑器面板共享同一套 Vue 构建产物，通过 __VIEW_MODE 区分渲染
-   * 注入 __LOCALE 确保语言偏好与编辑器面板同步
-   * 所有资源路径必须使用 asWebviewUri 处理
+   * 委托共享构建函数，注入侧边栏特有的全局变量
    */
   private async getWebviewHtml(webview: vscode.Webview): Promise<string> {
-    const distUri = vscode.Uri.joinPath(this.extensionUri, 'webview', 'dist');
-    const distPath = distUri.fsPath;
-
-    const htmlPath = path.join(distPath, 'index.html');
-    try {
-      await fs.promises.access(htmlPath);
-    } catch {
-      return getErrorHtml('Run "npm run build:webview" first.');
-    }
-
-    let html = await fs.promises.readFile(htmlPath, 'utf-8');
-
-    // 注入视图模式、语言偏好、语言来源、排序偏好、版本号、存储路径、文件夹清单和 VS Code API
     const locale = this.getLocale();
     const localeSource = this.getLocaleSource();
     const sortOrder = this.getSortOrder();
@@ -568,42 +526,18 @@ export class SidebarWebviewProvider implements vscode.WebviewViewProvider {
     const storagePath = this.snippetService.getStoragePath();
     // 文件夹清单序列化注入，供前端首屏渲染分组结构
     const foldersJson = JSON.stringify(this.snippetService.getFolders()).replace(/</g, '\\u003c');
-    html = html.replace(
-      '<head>',
-      `<head><script>window.__VIEW_MODE = 'sidebar'; window.__LOCALE = '${locale}'; window.__LOCALE_SOURCE = '${localeSource}'; window.__SORT_ORDER = '${sortOrder}'; window.__APP_VERSION = '${version}'; window.__STORAGE_PATH = ${JSON.stringify(storagePath)}; window.__FOLDERS = ${foldersJson}; window.vscode = acquireVsCodeApi()</script>`
-    );
 
-    // 替换 CSS 资源路径为 webview 可访问的 URI
-    html = html.replace(
-      /(<link[^>]*href=")([^"]*)(")/g,
-      (_match: string, p1: string, p2: string, p3: string) => {
-        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
-        return `${p1}${uri}${p3}`;
-      }
-    );
-
-    // 替换 JS 资源路径为 webview 可访问的 URI
-    html = html.replace(
-      /(<script[^>]*src=")([^"]*)(")/g,
-      (_match: string, p1: string, p2: string, p3: string) => {
-        const uri = webview.asWebviewUri(vscode.Uri.joinPath(distUri, p2));
-        return `${p1}${uri}${p3}`;
-      }
-    );
-
-    // 注入内容安全策略
-    const csp = `
-      <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none';
-        style-src ${webview.cspSource} 'unsafe-inline';
-        script-src ${webview.cspSource} 'unsafe-inline';
-        img-src ${webview.cspSource} https: data:;
-        font-src ${webview.cspSource};"
-      />`;
-
-    html = html.replace('<head>', `<head>${csp}`);
-
-    return html;
+    return buildWebviewHtml(webview, this.extensionUri, {
+      viewMode: 'sidebar',
+      locale,
+      injectVars: {
+        __LOCALE_SOURCE: `'${localeSource}'`,
+        __SORT_ORDER: `'${sortOrder}'`,
+        __APP_VERSION: `'${version}'`,
+        __STORAGE_PATH: JSON.stringify(storagePath),
+        __FOLDERS: foldersJson,
+      },
+    });
   }
 
 }
