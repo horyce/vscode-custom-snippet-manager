@@ -15,8 +15,8 @@
  * />
  */
 import { Icon } from '@iconify/vue'
-import type { Snippet } from '../types'
-import { getLanguageColor, getLanguageIcon } from '../utils/languages'
+import type { Snippet } from '../../../types'
+import { getLanguageColor, getLanguageIcon } from '../../../utils/languages'
 
 const { t } = useI18n()
 

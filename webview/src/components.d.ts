@@ -11,18 +11,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BaseButton: typeof import('./components/BaseButton.vue')['default']
-    BaseCheckbox: typeof import('./components/BaseCheckbox.vue')['default']
-    BaseRadio: typeof import('./components/BaseRadio.vue')['default']
-    CodeEditor: typeof import('./components/CodeEditor.vue')['default']
-    ConfirmDialog: typeof import('./components/ConfirmDialog.vue')['default']
-    FolderGroup: typeof import('./components/FolderGroup.vue')['default']
-    LanguageSelect: typeof import('./components/LanguageSelect.vue')['default']
-    NotificationBar: typeof import('./components/NotificationBar.vue')['default']
-    SearchInput: typeof import('./components/SearchInput.vue')['default']
-    SnippetItem: typeof import('./components/SnippetItem.vue')['default']
-    SnippetPreviewCard: typeof import('./components/SnippetPreviewCard.vue')['default']
-    SnippetSyntaxHelp: typeof import('./components/SnippetSyntaxHelp.vue')['default']
-    StrategyOption: typeof import('./components/StrategyOption.vue')['default']
+    BaseButton: typeof import('./components/base/BaseButton.vue')['default']
+    BaseCheckbox: typeof import('./components/base/BaseCheckbox.vue')['default']
+    BaseRadio: typeof import('./components/base/BaseRadio.vue')['default']
+    ConfirmDialog: typeof import('./components/feedback/ConfirmDialog.vue')['default']
+    LanguageSelect: typeof import('./components/form/LanguageSelect.vue')['default']
+    NotificationBar: typeof import('./components/feedback/NotificationBar.vue')['default']
   }
 }

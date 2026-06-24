@@ -7,7 +7,8 @@
  * 多选模式下：编辑按钮替换为拖拽图标，删除按钮替换为复选框，默认文件夹不可选/拖拽
  */
 import { Icon } from '@iconify/vue'
-import type { Snippet, Folder } from '../types'
+import type { Snippet, Folder } from '../../../types'
+import SnippetItem from './SnippetItem.vue'
 
 const props = defineProps<{
   /** 文件夹数据 */

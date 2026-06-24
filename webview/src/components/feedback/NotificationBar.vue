@@ -10,7 +10,7 @@
  * - 错误类型不自动隐藏，需手动关闭
  */
 import { Icon } from '@iconify/vue'
-import type { NotificationType } from '../composables/useNotification'
+import type { NotificationType } from '../../composables/useNotification'
 
 const props = defineProps<{
   /** 是否显示 */
