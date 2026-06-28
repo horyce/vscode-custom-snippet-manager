@@ -6,10 +6,10 @@
  * 语言设置支持自动检测（跟随 VS Code 语言）和手动选择
  */
 import { Icon } from '@iconify/vue'
-import { postToExt, onExtMessage } from '../../composables/useMessage'
-import { useConfirm } from '../../composables/useConfirm'
-import { useNotification } from '../../composables/useNotification'
-import { SUPPORTED_LOCALES } from '../../i18n'
+import { postToExt, onExtMessage } from '@/composables/useMessage'
+import { useConfirm } from '@/composables/useConfirm'
+import { useNotification } from '@/composables/useNotification'
+import { SUPPORTED_LOCALES } from '@/i18n'
 
 const { t } = useI18n()
 const { confirmState, showConfirm, handleConfirmOk, handleConfirmCancel } = useConfirm()

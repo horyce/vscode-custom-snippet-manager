@@ -6,12 +6,12 @@
  * 使用原生 HTML 表单元素替代 Naive UI，确保 webview 中交互可靠
  */
 import { Icon } from '@iconify/vue'
-import type { Snippet, Folder } from '../../types'
-import { DEFAULT_FOLDER_ID } from '../../types'
-import { SUPPORTED_LANGUAGES } from '../../utils/languages'
-import { postToExt, onExtMessage } from '../../composables/useMessage'
-import CodeEditor from './components/CodeEditor.vue'
-import SnippetSyntaxHelp from './components/SnippetSyntaxHelp.vue'
+import type { Snippet, Folder } from '@/types'
+import { DEFAULT_FOLDER_ID } from '@/types'
+import { SUPPORTED_LANGUAGES } from '@/utils/languages'
+import { postToExt, onExtMessage } from '@/composables/useMessage'
+import CodeEditor from '@/views/editor/components/CodeEditor.vue'
+import SnippetSyntaxHelp from '@/views/editor/components/SnippetSyntaxHelp.vue'
 
 const { t, locale } = useI18n()
 

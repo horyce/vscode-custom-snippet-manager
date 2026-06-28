@@ -3,9 +3,9 @@
  * 从 SidebarView.vue 提取，管理导出范围、重复策略、导入存放方式三个对话框的状态和消息监听
  */
 import type { Ref } from 'vue'
-import type { Snippet, Folder } from '../types'
-import { DEFAULT_FOLDER_ID } from '../types'
-import { postToExt, onExtMessage } from './useMessage'
+import type { Snippet, Folder } from '@/types'
+import { DEFAULT_FOLDER_ID } from '@/types'
+import { postToExt, onExtMessage } from '@/composables/useMessage'
 
 /** 确认弹窗配置（与 useConfirm 的 ConfirmOptions 兼容） */
 interface ConfirmOptions {

@@ -3,9 +3,9 @@
  * 从 SidebarView.vue 提取，管理文件夹编辑、删除、批量删除三个对话框的状态和操作
  */
 import type { Ref } from 'vue'
-import type { Snippet, Folder } from '../types'
-import { DEFAULT_FOLDER_ID } from '../types'
-import { postToExt } from './useMessage'
+import type { Snippet, Folder } from '@/types'
+import { DEFAULT_FOLDER_ID } from '@/types'
+import { postToExt } from '@/composables/useMessage'
 
 /** 确认弹窗配置（与 useConfirm 的 ConfirmOptions 兼容） */
 interface ConfirmOptions {

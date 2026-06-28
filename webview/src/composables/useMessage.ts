@@ -4,7 +4,7 @@
  * 所有 webview 与后端的数据交互都通过此模块完成
  */
 import { useEventListener } from '@vueuse/core'
-import type { WebviewMessage, ExtMessage, MessageType } from '../types'
+import type { WebviewMessage, ExtMessage, MessageType } from '@/types'
 
 /** 消息处理回调函数类型 */
 type MessageHandler = (payload: unknown) => void

@@ -4,8 +4,8 @@
  * 应用根组件
  * 侧边栏和编辑器共用同一套 Vue 构建产物，通过视图模式区分
  */
-import SidebarView from './views/sidebar/SidebarView.vue'
-import EditorView from './views/editor/EditorView.vue'
+import SidebarView from '@/views/sidebar/SidebarView.vue'
+import EditorView from '@/views/editor/EditorView.vue'
 
 // 读取后端注入的视图模式标识，默认为 sidebar
 const viewMode = computed(() => window.__VIEW_MODE || 'sidebar')

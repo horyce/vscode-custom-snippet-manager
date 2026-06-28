@@ -14,7 +14,7 @@ import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirro
 import { syntaxHighlighting, defaultHighlightStyle, foldGutter, foldKeymap } from '@codemirror/language'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
-import { getLanguageExtension } from '../../../utils/codemirror-langs'
+import { getLanguageExtension } from '@/utils/codemirror-langs'
 
 const props = withDefaults(defineProps<{
   /** 编辑器内容，支持 v-model */

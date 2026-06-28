@@ -12,8 +12,8 @@
  * previewCard.value?.show(event, snippet)
  * previewCard.value?.hide()
  */
-import type { Snippet } from '../../../types'
-import { highlightCodeString } from '../../../utils/codemirror-langs'
+import type { Snippet } from '@/types'
+import { highlightCodeString } from '@/utils/codemirror-langs'
 
 // 预览卡片最大显示行数
 const PREVIEW_MAX_LINES = 8
