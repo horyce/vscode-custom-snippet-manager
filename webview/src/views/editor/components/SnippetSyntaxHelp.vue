@@ -1,8 +1,10 @@
 <!-- 片段语法帮助组件：折叠展示 VS Code SnippetString 完整语法 -->
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { useNotification } from '@/composables/useNotification'
 
 const { t } = useI18n()
+const { notification, showSuccess, clearNotification } = useNotification()
 
 // 展开/折叠状态
 const expanded = ref(false)
@@ -15,14 +17,20 @@ function toggle() {
 // 已复制项的 code 集合，用于在按钮上短暂显示对勾反馈
 const copiedCodes = ref<Record<string, boolean>>({})
 
-/** 复制语法代码到剪贴板，并在 1.5 秒内显示对勾反馈 */
+/**
+ * 复制语法代码到剪贴板
+ * 成功后同时提供两层反馈：按钮图标短暂切换为对勾（即时确认）+ 底部弹出通知条（明确提示）
+ */
 async function copyCode(code: string) {
   try {
     await navigator.clipboard.writeText(code)
+    // 即时内联反馈：按钮图标短暂切换为对勾
     copiedCodes.value[code] = true
     setTimeout(() => {
       copiedCodes.value[code] = false
     }, 1500)
+    // 全局通知反馈：底部弹出成功提示
+    showSuccess(t('syntax.copied'))
   } catch (err) {
     console.error('[SnippetSyntaxHelp] 复制失败:', err)
   }
@@ -167,6 +175,15 @@ const sections = computed(() => [
       </div>
     </div>
   </div>
+
+  <!-- 复制成功通知条，fixed 定位脱离 syntax-help 容器，显示在 webview 底部 -->
+  <NotificationBar
+    :visible="notification.visible"
+    :type="notification.type"
+    :message="notification.message"
+    :auto-hide="notification.autoHide"
+    @close="clearNotification"
+  />
 </template>
 
 <style scoped lang="scss">
