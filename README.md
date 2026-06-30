@@ -47,7 +47,7 @@
 
 ![language](./resources/SwitchLanguage.gif)
 
-* Supports 25 languages: 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / ไทย / Tiếng Việt / Українська / Română / Ελληνικά / हिन्दी
+* Supports 22 languages: 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / Українська / Română / Ελληνικά
 * Easily switch between languages
 * Language preference is saved automatically
 

@@ -7,7 +7,7 @@
  * 避免渲染后立即切换语言造成的视觉闪烁
  */
 import { createApp } from 'vue'
-import i18n, { ensureLocale } from '@/i18n'
+import i18n, { ensureLocale, SUPPORTED_LOCALES } from '@/i18n'
 import { registerIcons } from '@/utils/icons'
 import App from '@/App.vue'
 
@@ -16,7 +16,9 @@ registerIcons()
 
 // 异步引导：确保启动语言翻译已加载后再挂载应用
 async function bootstrap() {
-  const startupLocale = window.__LOCALE || 'zh'
+  const rawLocale = window.__LOCALE || 'zh'
+  // 校验启动语言是否仍受支持，已移除语言的偏好回退到英文（通用兜底）
+  const startupLocale = SUPPORTED_LOCALES.some(l => l.value === rawLocale) ? rawLocale : 'en'
   await ensureLocale(startupLocale)
   const app = createApp(App)
   // 注册国际化插件，支持多语言切换

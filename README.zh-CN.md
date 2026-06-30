@@ -47,7 +47,7 @@
 
 ![language](./resources/SwitchLanguage.gif)
 
-* 支持 25 种语言：简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / ไทย / Tiếng Việt / Українська / Română / Ελληνικά / हिन्दी
+* 支持 22 种语言：简体中文 / 繁體中文 / English / 日本語 / 한국어 / Русский / Deutsch / Français / Español / Português / Italiano / Polski / Türkçe / Svenska / Dansk / Suomi / Nederlands / Čeština / Magyar / Українська / Română / Ελληνικά
 * 一键切换语言
 * 自动记住用户语言偏好
 

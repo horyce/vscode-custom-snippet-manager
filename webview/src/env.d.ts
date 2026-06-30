@@ -8,7 +8,7 @@ interface VscodeApi {
 }
 
 /** 支持的语言标识符 */
-type AppLocale = 'zh' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'ru' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'pl' | 'tr' | 'sv' | 'da' | 'fi' | 'nl' | 'cs' | 'hu' | 'th' | 'vi' | 'uk' | 'ro' | 'el' | 'hi'
+type AppLocale = 'zh' | 'zh-TW' | 'en' | 'ja' | 'ko' | 'ru' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'pl' | 'tr' | 'sv' | 'da' | 'fi' | 'nl' | 'cs' | 'hu' | 'uk' | 'ro' | 'el'
 
 declare global {
   interface Window {

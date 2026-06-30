@@ -33,10 +33,7 @@ export const SUPPORTED_LOCALES: LocaleOption[] = [
   { value: 'nl', label: 'Nederlands', flag: 'nl' },
   { value: 'cs', label: 'Čeština', flag: 'cz' },
   { value: 'hu', label: 'Magyar', flag: 'hu' },
-  { value: 'th', label: 'ไทย', flag: 'th' },
-  { value: 'vi', label: 'Tiếng Việt', flag: 'vn' },
   { value: 'uk', label: 'Українська', flag: 'ua' },
   { value: 'ro', label: 'Română', flag: 'ro' },
   { value: 'el', label: 'Ελληνικά', flag: 'gr' },
-  { value: 'hi', label: 'हिन्दी', flag: 'in' },
 ]
